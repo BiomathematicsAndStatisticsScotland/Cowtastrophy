@@ -58,4 +58,14 @@ public final class ControlStrategyFactory {
         }
         return new NullStrategy();
     }
+	
+	/**
+     * Create the appropriate control strategy given its name and a json formatted string of parameters.
+     * @param strategyJson a json formatted string with the parameters for the strategy.
+     * @return the control strategy object.
+     */
+    public static ControlStrategy create(final int culling, final int vaccinate, final double vacradius) {
+
+		return new CullVacCombi(culling, vaccinate, vacradius);
+    }
 }

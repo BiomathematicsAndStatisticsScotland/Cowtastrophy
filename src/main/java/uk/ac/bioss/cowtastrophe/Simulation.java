@@ -124,6 +124,7 @@ public class Simulation implements Serializable {
         };
         this.simulator.setController(controller);
 
+		
         // finally create the transition kernel
         this.kernel = updateKernel();
         this.simulator.setTransitionKernel(kernel);
@@ -280,7 +281,7 @@ public class Simulation implements Serializable {
 
         jsFile.append("{");
         jsFile.append("\"session_id\": \"").append(sessionId).append("\", ");
-        jsFile.append("\"timeframe\": \"").append(day).append("\", ");
+        jsFile.append("\"timeframe\": \"").append(day+1).append("\", ");
         jsFile.append("\"farms\": [");
 
         jsFile.append(farms.stream().map(Farm::asJson)
