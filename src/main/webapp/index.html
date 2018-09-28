@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+
+<html>
+    <head>
+
+        <script type = "text/javascript">
+
+            function callServlet() {
+                var param1 = document.forms["demoForm"]["mode"];
+                param1.value = run24Hours;
+                document.forms["demoForm"]["controlStrategy"].value = "{\"strategy\":\"Cull_on_confirmation_with_ring\",\"radius\":\"5\"}";
+                document.forms["demoForm"]["session"].value = "";
+
+                var xhr = new XMLHttpRequest();
+                xhr.open("GET", "/cowtastrophe/simulation");
+                xhr.onload = function (event) {
+                    console.log("The server responded with: " + event.target.response);
+                };
+                var formData = new FormData(document.getElementById("demoForm"));
+                xhr.send(formData);
+            }
+
+        </script>
+
+        <title>TODO supply a title</title>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    </head>
+    <body>
+
+        <H3>Simple index page that calls servlet, passing a simple parameter.</H3>
+        <!--
+        <form method="post" action="simulation"> 
+            <input type="hidden" name="parameter1" value="888" />
+            <input type="submit" name="aaaa" value="post_params_set_in_html"> 
+        </form> 
+        <form method="get" action="simulation"> 
+            <input type="hidden" name="parameter1" value="888" />
+            <input type="submit" name="aaaa" value="get_params_set_in_html"> 
+        </form> 
+        -->
+
+        <form id="demoForm" action="simulation" onsubmit="return callServlet()" method="get">
+            <input type="HIDDEN" name="mode" value="run24Hours">
+            <input type="HIDDEN" name="controlStrategy" value="null">
+            <input type="HIDDEN" name="session" value="">
+            <input type="submit" value="Submit">
+        </form>
+
+
+    </body>
+</html>
