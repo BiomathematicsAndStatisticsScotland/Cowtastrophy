@@ -96,7 +96,9 @@ public class AppServlet extends HttpServlet {
             simulation.setControlStrategy(strategy);
         }
 
-        if ("24Hours".equals(request.getParameter("mode"))) {
+        log.info("Running");
+        if ("run24Hours".equals(request.getParameter("mode"))) {
+            log.info("Running 24 hours");
             simulation.run24Hours();
         } else if ("run".equals(request.getParameter("mode"))) {
             simulation.run();
