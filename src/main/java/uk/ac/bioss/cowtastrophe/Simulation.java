@@ -32,6 +32,7 @@ public class Simulation implements Serializable {
 
     /**
      * Create a simulation from a set of parameters.
+     * @param directory the directory where the output is to be stored.
      * @param paramsFileName the name of the file containing the parameters with which to run the simulation.
      */
     public Simulation(final String directory, final String paramsFileName) {
@@ -50,6 +51,7 @@ public class Simulation implements Serializable {
         this.easeMvmtRestriction = new HashMap<>();
         this.helper = new SimulationHelper(this);
         this.day = 0;
+        this.time = 0;
         this.statistics = new Statistics();
         this.controlStrategy = new NullStrategy();
         this.rngSeed = new RNG(RNG.Generator.Well19937c).getInteger(0, Integer.MAX_VALUE - 1);
@@ -90,7 +92,7 @@ public class Simulation implements Serializable {
         kernel = new TransitionKernel();
         this.simulator = new GillespieSimple(manager, kernel);
         this.simulator.setRngSeed(rngSeed);
-        this.simulator.setStartTime(day);
+        this.simulator.setStartTime(time);
 
         // register all suspected farms on day 0 to be checked.
         for (Farm farm : suspectedFarms) {
@@ -102,7 +104,7 @@ public class Simulation implements Serializable {
         }
 
         // save the initial setup.
-        helper.saveSession(sessionId, day);
+        helper.saveSession(sessionId, time);
         helper.savePid(sessionId);
     }
 
@@ -110,7 +112,7 @@ public class Simulation implements Serializable {
      * Run the simulation for the next 24 hours.
      */
     public final void run24Hours() {
-        // TODO: add memeber daysSinceLastSuspectedCase;
+        // TODO: add member daysSinceLastSuspectedCase;
         // run the simulation for 24 hours.
         log.info("Running simulation for day {}", day);
 
@@ -118,9 +120,8 @@ public class Simulation implements Serializable {
 
         // Add a controller (netbeans converted anpnymous inner class to this lambda)
         final SimulationController controller = (StochasticSimulator sim) -> {
-            log.trace("Checking if simulation time {} < current day {}",
-                      sim.getCurrentTime(), day);
-            return sim.getCurrentTime() <= day;
+            log.trace("Checking if simulation time {} < time {}", sim.getCurrentTime(), time);
+            return sim.getCurrentTime() <= time;
         };
         this.simulator.setController(controller);
 
@@ -150,7 +151,8 @@ public class Simulation implements Serializable {
                  this.simulator.getCurrentTime());
         log.trace("Scheduled tests: {}", SuspisciousFarmTests.toString());
         day += 1; // update the time by one day...
-        helper.saveSession(sessionId, day);
+        time = this.simulator.getCurrentTime();
+        helper.saveSession(sessionId, time);
     }
 
     /**
@@ -303,6 +305,9 @@ public class Simulation implements Serializable {
     @JsonIgnore
     @Getter
     private int day;
+    @JsonIgnore
+    @Getter
+    private double time;
     @Getter
     private final List<Farm> farms;
     @Getter

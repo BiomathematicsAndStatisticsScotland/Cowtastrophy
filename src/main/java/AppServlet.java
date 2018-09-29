@@ -97,8 +97,8 @@ public class AppServlet extends HttpServlet {
         }
 
         log.info("Running");
-        if ("run24Hours".equals(request.getParameter("mode"))) {
-            log.info("Running 24 hours");
+        if ("runToNextEvent".equals(request.getParameter("mode"))) {
+            log.info("Running Simulation to Next Event");
             simulation.run24Hours();
         } else if ("run".equals(request.getParameter("mode"))) {
             simulation.run();

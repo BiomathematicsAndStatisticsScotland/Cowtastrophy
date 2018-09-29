@@ -72,7 +72,7 @@ public class SimulationHelper implements Serializable {
      * @param time      the simulation time of the session (will be used as the filename).
      * @return the file that the simulation was serialised to.
      */
-    public final String saveSession(final String sessionId, final int time) {
+    public final String saveSession(final String sessionId, final double time) {
         String sessionFile = parameters.getDirectory() + sessionId + File.separator
                              + sessionId + "_" + time + ".ser";
         String jsonFile = parameters.getDirectory() + sessionId + File.separator

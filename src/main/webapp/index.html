@@ -7,7 +7,7 @@
 
             function callServlet() {
                 var param1 = document.forms["demoForm"]["mode"];
-                param1.value = run24Hours;
+                param1.value = runToNextEvent;
                 document.forms["demoForm"]["controlStrategy"].value = "{\"strategy\":\"Cull_on_confirmation_with_ring\",\"radius\":\"5\"}";
                 document.forms["demoForm"]["session"].value = "";
 
@@ -41,7 +41,7 @@
         -->
 
         <form id="demoForm" action="simulation" onsubmit="return callServlet()" method="get">
-            <input type="HIDDEN" name="mode" value="run24Hours">
+            <input type="HIDDEN" name="mode" value="runToNextEvent">
             <input type="HIDDEN" name="controlStrategy" value="null">
             <input type="HIDDEN" name="session" value="">
             <input type="submit" value="Submit">
