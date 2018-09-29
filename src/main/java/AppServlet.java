@@ -8,6 +8,8 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.PrintWriter;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Map;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
@@ -40,8 +42,9 @@ public class AppServlet extends HttpServlet {
         log = logFacade.getRootLogger();
         try {
             // The valid levels are INFO, DEBUG, TRACE, ERROR, ALL
-            logFacade.addFileLogger("uk.ac.bioss.cowtastrophe.log", "TRACE", logFormatThreadMsg,
-                                    true);
+            Path logFilePath = Paths.get(this.getServletConfig().getInitParameter("BaseDirectory"), 
+                                  "/uk.ac.bioss.cowtastrophe.log");
+            logFacade.addFileLogger(logFilePath.toString(), "TRACE", logFormatThreadMsg, true);
             logFacade.addConsoleLogger("INFO", logFormatThreadMsg);
 
             logFacade.getRootLogger().setLevel(Level.TRACE);
