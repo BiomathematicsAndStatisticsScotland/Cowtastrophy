@@ -79,6 +79,25 @@ public class Farm implements SimulationState, Serializable {
         return jsonStr;
     }
 
+    @Override
+    public boolean equals(Object obj) {
+        if (obj == null) {
+            return false;
+        }
+        if (!(obj instanceof Farm)) {
+            return false;
+        }
+        if (obj == this) {
+            return true;
+        }
+        return this.getId() == ((Farm) obj).getId();
+    }
+
+    @Override
+    public int hashCode() {
+        return id;
+    }
+
     /**
      * The id of the farm.
      */
