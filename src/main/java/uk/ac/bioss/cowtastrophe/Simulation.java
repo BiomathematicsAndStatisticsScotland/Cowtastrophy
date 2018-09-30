@@ -174,28 +174,30 @@ public class Simulation implements Serializable {
      */
     private void doDailyChecks() {
         //First: check all suspected farms and mark them as confirmed.
-        Collection<Event> todaysTests = new HashSet(SuspisciousFarmTests.get(this.getDay()));
-        if (todaysTests != null) {
-            log.info("Testing {} suspected farms on day {} (next infection event at = {})",
-                     todaysTests.size(), day, simulator.getCurrentTime());
-            for (final Object eventObj : todaysTests) {
-                Event event = (Event) eventObj;
+        if (SuspisciousFarmTests.get(this.getDay()) != null) {
+            Collection<Event> todaysTests = new HashSet(SuspisciousFarmTests.get(this.getDay()));
+            if (todaysTests != null) {
+                log.info("Testing {} suspected farms on day {} (next infection event at = {})",
+                         todaysTests.size(), day, simulator.getCurrentTime());
+                for (final Object eventObj : todaysTests) {
+                    Event event = (Event) eventObj;
 
-                Farm suspectedFarm = (Farm) event.getInitialState();
-                final double cost = parameters.getCostOfFarmVisit()
-                                    + parameters.getCostOfTestPerAnimal() * suspectedFarm.getHerdSize();
-                statistics.addCost(day, cost);
-                log.trace("Testing farm {} at time {} [cost = {}]", suspectedFarm, day, cost);
-                if (DiseaseState.SUSPECTED == suspectedFarm.getStatus()) {
-                    // this should always be the case, but checking to be sure!
-                    suspectedFarms.remove(suspectedFarm);
-                    suspectedFarm.setStatus(DiseaseState.CONFIRMED);
-                    confirmedFarms.add(suspectedFarm);
-                    log.info("Farm {} confirmed.", suspectedFarm.getId());
+                    Farm suspectedFarm = (Farm) event.getInitialState();
+                    final double cost = parameters.getCostOfFarmVisit()
+                                        + parameters.getCostOfTestPerAnimal() * suspectedFarm.getHerdSize();
+                    statistics.addCost(day, cost);
+                    log.trace("Testing farm {} at time {} [cost = {}]", suspectedFarm, day, cost);
+                    if (DiseaseState.SUSPECTED == suspectedFarm.getStatus()) {
+                        // this should always be the case, but checking to be sure!
+                        suspectedFarms.remove(suspectedFarm);
+                        suspectedFarm.setStatus(DiseaseState.CONFIRMED);
+                        confirmedFarms.add(suspectedFarm);
+                        log.info("Farm {} confirmed.", suspectedFarm.getId());
+                    }
                 }
+                // cleaning up - removing these tests from the map!
+                SuspisciousFarmTests.remove(day);
             }
-            // cleaning up - removing these tests from the map!
-            SuspisciousFarmTests.remove(day);
         }
 
         //Second: check if any farms that have a movement ban can have the ban lifted.
