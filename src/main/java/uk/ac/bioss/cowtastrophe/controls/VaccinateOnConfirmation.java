@@ -37,10 +37,14 @@ public class VaccinateOnConfirmation extends ControlStrategy implements Serializ
         }
 
         for (Farm farm : toBeVaccinated) {
-            farm.setDayVaccinated(simulation.getDay());
-            farm.setStatus(DiseaseState.VACCINATED);
+            // Note: we are vaccinating farms within a ring so there may be suspected and susceptible
+            // farms that we are vaccinating, so we must update these lists also.
+            simulation.getSusceptibleFarms().remove(farm);
+            simulation.getSuspectedFarms().remove(farm);
             simulation.getConfirmedFarms().remove(farm);
             simulation.getVaccinatedFarms().add(farm);
+            farm.setDayVaccinated(simulation.getDay());
+            farm.setStatus(DiseaseState.VACCINATED);
             simulation.getStatistics().addCost(simulation.getDay(),
                                                farm.getHerdSize() * simulation.getParameters().getCostOfCullingAnimal()
                                                + simulation.getParameters().getCostOfFarmVisit());
