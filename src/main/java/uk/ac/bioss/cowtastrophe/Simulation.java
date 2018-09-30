@@ -12,8 +12,11 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -161,7 +164,7 @@ public class Simulation implements Serializable {
      */
     private void doDailyChecks() {
         //First: check all suspected farms and mark them as confirmed.
-        Collection<Event> todaysTests = SuspisciousFarmTests.get(this.getDay());
+        Collection<Event> todaysTests = new HashSet(SuspisciousFarmTests.get(this.getDay()));
         if (todaysTests != null) {
             log.info("Testing {} suspected farms on day {} (next infection event at = {})",
                      todaysTests.size(), day, simulator.getCurrentTime());
