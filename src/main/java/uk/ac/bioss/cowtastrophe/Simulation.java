@@ -14,7 +14,6 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
@@ -55,7 +54,6 @@ public class Simulation implements Serializable {
         this.easeMvmtRestriction = new HashMap<>();
         this.helper = new SimulationHelper(this);
         this.day = 0;
-        this.time = 0;
         this.statistics = new Statistics();
         this.controlStrategy = new NullStrategy();
         this.rngSeed = new RNG(RNG.Generator.Well19937c).getInteger(0, Integer.MAX_VALUE - 1);
@@ -96,7 +94,7 @@ public class Simulation implements Serializable {
         kernel = new TransitionKernel();
         this.simulator = new GillespieSimple(manager, kernel);
         this.simulator.setRngSeed(rngSeed);
-        this.simulator.setStartTime(time);
+        this.simulator.setStartTime(day);
 
         // register all suspected farms on day 0 to be checked.
         for (Farm farm : suspectedFarms) {
@@ -108,7 +106,7 @@ public class Simulation implements Serializable {
         }
 
         // save the initial setup.
-        helper.saveSession(sessionId, time);
+        helper.saveSession(sessionId, day);
         helper.savePid(sessionId);
     }
 
@@ -124,8 +122,8 @@ public class Simulation implements Serializable {
 
         // Add a controller (netbeans converted anpnymous inner class to this lambda)
         final SimulationController controller = (StochasticSimulator sim) -> {
-            log.trace("Checking if simulation time {} < time {}", sim.getCurrentTime(), time);
-            return sim.getCurrentTime() <= time;
+            log.trace("Checking if simulation time {} < time {}", sim.getCurrentTime(), day);
+            return sim.getCurrentTime() <= day;
         };
         this.simulator.setController(controller);
 
@@ -164,8 +162,7 @@ public class Simulation implements Serializable {
                  this.simulator.getCurrentTime());
         log.trace("Scheduled tests: {}", SuspisciousFarmTests.toString());
         day += 1; // update the time by one day...
-        time = this.simulator.getCurrentTime();
-        helper.saveSession(sessionId, time);
+        helper.saveSession(sessionId, day);
     }
 
     /**
@@ -321,8 +318,6 @@ public class Simulation implements Serializable {
     @Getter
     private int day;
     @JsonIgnore
-    @Getter
-    private double time;
     @Getter
     private final Set<Farm> farms;
     @Getter
