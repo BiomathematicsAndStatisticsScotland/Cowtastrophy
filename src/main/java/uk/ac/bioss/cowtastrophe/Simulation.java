@@ -17,6 +17,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.Map;
 import java.util.Set;
+import java.util.TreeSet;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -43,13 +44,13 @@ public class Simulation implements Serializable {
         // the parameters file
         this.parameters = new Parameters(paramsFileName);
         this.parameters.setDirectory(directory);
-        this.farms = new ArrayList<>(this.parameters.getFarms());
-        this.suspectedFarms = new ArrayList<>();
-        this.confirmedFarms = new ArrayList<>();
-        this.culledFarms = new ArrayList<>();
-        this.susceptibleFarms = new ArrayList<>();
-        this.vaccinatedFarms = new ArrayList<>();
-        this.restrictedFarms = new ArrayList<>();
+        this.farms = new HashSet<>(this.parameters.getFarms());
+        this.suspectedFarms = new HashSet<>();
+        this.confirmedFarms = new HashSet<>();
+        this.culledFarms = new HashSet<>();
+        this.susceptibleFarms = new HashSet<>();
+        this.vaccinatedFarms = new HashSet<>();
+        this.restrictedFarms = new HashSet<>();
         this.SuspisciousFarmTests = new HashMap<>();
         this.easeMvmtRestriction = new HashMap<>();
         this.helper = new SimulationHelper(this);
@@ -144,10 +145,19 @@ public class Simulation implements Serializable {
         statistics.addCulledFarms(day, culledFarms.size());
         statistics.addVaccinatedFarms(day, vaccinatedFarms.size());
         //statistics.addCost(time, 0.0); // TODO - update this when the controls have been encoded.
-
-        log.info("Suspected Farms = {} ", suspectedFarms);
-        log.info("Confirmed Farms = {} ", confirmedFarms);
-        log.info("Culled Farms = {} ", culledFarms);
+        
+        log.info("Suspected Farms = {} ", new TreeSet(suspectedFarms.stream()
+            .map(Farm::getId)
+            .collect(Collectors.toList())));
+        log.info("Confirmed Farms = {} ", new TreeSet(confirmedFarms.stream()
+            .map(Farm::getId)
+            .collect(Collectors.toList())));
+        log.info("Culled Farms = {} ", new TreeSet(culledFarms.stream()
+            .map(Farm::getId)
+            .collect(Collectors.toList())));
+        log.info("Vaccinated Farms = {} ", new TreeSet(vaccinatedFarms.stream()
+            .map(Farm::getId)
+            .collect(Collectors.toList())));
 
         log.info("Finished simulation for day {} [next infection event at = {}]",
                  day,
@@ -312,19 +322,19 @@ public class Simulation implements Serializable {
     @Getter
     private double time;
     @Getter
-    private final List<Farm> farms;
+    private final Set<Farm> farms;
     @Getter
-    private final List<Farm> suspectedFarms;
+    private final Set<Farm> suspectedFarms;
     @Getter
-    private final List<Farm> confirmedFarms;
+    private final Set<Farm> confirmedFarms;
     @Getter
-    private final List<Farm> culledFarms;
+    private final Set<Farm> culledFarms;
     @Getter
-    private final List<Farm> susceptibleFarms;
+    private final Set<Farm> susceptibleFarms;
     @Getter
-    private final List<Farm> vaccinatedFarms;
+    private final Set<Farm> vaccinatedFarms;
     @Getter
-    private final List<Integer> restrictedFarms;
+    private final Set<Integer> restrictedFarms;
     private final PopulationManager manager;
     @Getter
     @Setter
