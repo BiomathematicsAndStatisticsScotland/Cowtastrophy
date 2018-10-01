@@ -7,11 +7,11 @@
         <servlet-class>AppServlet</servlet-class>
         <init-param>
             <param-name>SettingsFile</param-name>
-            <param-value>/Users/anthony/Research/Projects/SEFARI/cowtastropheWeb/resources/cowtastrophe.properties</param-value>
+            <param-value>/Users/anthony/Research/src/BiomathematicsAndStatisticsScotland/Cowtastrophy/resources/cowtastrophe.properties</param-value>
         </init-param>
         <init-param>
             <param-name>BaseDirectory</param-name>
-            <param-value>/Users/anthony/Research/Projects/SEFARI/cowtastropheWeb/resources/</param-value>
+            <param-value>/Users/anthony/Research/src/BiomathematicsAndStatisticsScotland/Cowtastrophy/resources/</param-value>
         </init-param>
     </servlet>
     <servlet-mapping>

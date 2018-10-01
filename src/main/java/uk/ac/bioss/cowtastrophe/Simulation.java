@@ -348,5 +348,5 @@ public class Simulation implements Serializable {
     private boolean isthreadRunning;
     private final int rngSeed;
 
-    private static final long serialVersionUID = 32345527169572994L;
+    private static final long serialVersionUID = 32345527169572885L;
 }
