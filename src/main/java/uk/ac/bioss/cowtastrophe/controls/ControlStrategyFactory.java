@@ -40,6 +40,8 @@ public final class ControlStrategyFactory {
                     return new CullOnSuspicion(strategyNode);
                 } else if ("Movement_restriction".equalsIgnoreCase(strategy)) {
                     return new MovementRestriction(strategyNode);
+                } else if ("Global_movement_restriction".equalsIgnoreCase(strategy)) {
+                    return new GlobalMovementRestriction(strategyNode);
                 } else if ("Cull_on_confirmation_with_Ring".equalsIgnoreCase(strategy)) {
                     return new CullOnConfirmationWithRing(strategyNode);
                 } else if ("Vaccinate_on_confirmation".equalsIgnoreCase(strategy)) {
