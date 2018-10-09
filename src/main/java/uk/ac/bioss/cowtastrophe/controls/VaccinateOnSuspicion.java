@@ -53,12 +53,17 @@ public class VaccinateOnSuspicion extends ControlStrategy implements Serializabl
             }
         }
     }
+    
+    /**
+     * A public identifier (name) of the strategy.
+     */
+    public static final String name = "Vaccinate_on_suspicion";
 
     private final double radius;
 
     /**
      * The serialVersionUID.
      */
-    private static final long serialVersionUID = 7482289333756294766L;
+    private static final long serialVersionUID = 7482289333883645276L;
 
 }

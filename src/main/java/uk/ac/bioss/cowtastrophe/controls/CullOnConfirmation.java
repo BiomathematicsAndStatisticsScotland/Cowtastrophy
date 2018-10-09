@@ -36,9 +36,14 @@ public class CullOnConfirmation extends ControlStrategy implements Serializable 
                                                + simulation.getParameters().getCostOfFarmVisit());
         }
     }
+    
+    /**
+     * A public identifier (name) of the strategy.
+     */
+    public static final String name = "Cull_on_confirmation";
 
     /**
      * The serialVersionUID.
      */
-    private static final long serialVersionUID = 1572928931743027427L;
+    private static final long serialVersionUID = 1572928939343027427L;
 }

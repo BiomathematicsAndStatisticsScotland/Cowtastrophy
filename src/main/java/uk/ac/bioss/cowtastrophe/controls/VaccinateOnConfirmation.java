@@ -52,11 +52,17 @@ public class VaccinateOnConfirmation extends ControlStrategy implements Serializ
             }
         }
     }
+    
+    /**
+     * A public identifier (name) of the strategy.
+     */
+    public static final String name = "Vaccinate_on_confirmation";
+    
 
     private final double radius;
 
     /**
      * The serialVersionUID.
      */
-    private static final long serialVersionUID = 7482289333756294766L;
+    private static final long serialVersionUID = 2283746333756294766L;
 }

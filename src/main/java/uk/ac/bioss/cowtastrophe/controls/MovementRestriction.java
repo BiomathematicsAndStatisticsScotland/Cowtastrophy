@@ -76,11 +76,16 @@ public class MovementRestriction extends ControlStrategy implements Serializable
             }
         }
     }
-
+    
+    /**
+     * A public identifier (name) of the strategy.
+     */
+    public static final String name = "Movement_restriction";
+    
     private final Map<Integer, MovementRestriction.Params> restrictions;
     
     /**
      * The serialVersionUID.
      */
-    private static final long serialVersionUID = 1153489311840574586L;
+    private static final long serialVersionUID = 1008489311840574586L;
 }

@@ -33,5 +33,16 @@ public class GlobalMovementRestriction extends ControlStrategy implements Serial
             // do not schedule when the movement ban should be lifted.
         }
     }
+    
+    /**
+     * A public identifier (name) of the strategy.
+     */
+    public static final String name = "Global_movement_restriction";
+    
+    /**
+     * The serialVersionUID.
+     */
+    private static final long serialVersionUID = -8766359311840574586L;
+    
 
 }

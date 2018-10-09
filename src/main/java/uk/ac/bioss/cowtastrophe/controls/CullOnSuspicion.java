@@ -36,8 +36,14 @@ public class CullOnSuspicion extends ControlStrategy implements Serializable {
                                                + simulation.getParameters().getCostOfFarmVisit());
         }
     }
+    
+    /**
+     * A public identifier (name) of the strategy.
+     */
+    public static final String name = "Cull_on_suspicion";
+    
     /**
      * The serialVersionUID.
      */
-    private static final long serialVersionUID = 2742893170483674527L;
+    private static final long serialVersionUID = 2742893009483674527L;
 }

@@ -46,10 +46,15 @@ public class CullOnConfirmationWithRing extends ControlStrategy implements Seria
                                                + simulation.getParameters().getCostOfFarmVisit());
         }
     }
+    
+    /**
+     * A public identifier (name) of the strategy.
+     */
+    public static final String name = "Cull_on_confirmation_with_Ring";
 
     private final double radius;
     /**
      * The serialVersionUID.
      */
-    private static final long serialVersionUID = -3204938317430274527L;
+    private static final long serialVersionUID = -3204938317835274527L;
 }

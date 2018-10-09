@@ -28,46 +28,48 @@ public final class ControlStrategyFactory {
             try {
                 ObjectMapper mapper = new ObjectMapper();
                 final JsonNode strategyNode = mapper.readTree(strategyJson);
-                
+
                 if (strategyNode.get("strategy") == null) {
                     return new NullStrategy(strategyNode);
                 }
-                
-                String strategy = strategyNode.get("strategy").asText();
-                if ("Cull_on_confirmation".equalsIgnoreCase(strategy)) {
-                    return new CullOnConfirmation(strategyNode);
-                } else if ("Cull_on_suspicion".equalsIgnoreCase(strategy)) {
-                    return new CullOnSuspicion(strategyNode);
-                } else if ("Movement_restriction".equalsIgnoreCase(strategy)) {
-                    return new MovementRestriction(strategyNode);
-                } else if ("Global_movement_restriction".equalsIgnoreCase(strategy)) {
-                    return new GlobalMovementRestriction(strategyNode);
-                } else if ("Cull_on_confirmation_with_Ring".equalsIgnoreCase(strategy)) {
-                    return new CullOnConfirmationWithRing(strategyNode);
-                } else if ("Vaccinate_on_confirmation".equalsIgnoreCase(strategy)) {
-                    return new VaccinateOnConfirmation(strategyNode);
-                } else if ("Vaccinate_on_suspicion".equalsIgnoreCase(strategy)) {
-                    return new VaccinateOnSuspicion(strategyNode);
-                } else if ("Ring_vaccination".equalsIgnoreCase(strategy)) {
-                    return new RingVaccination(strategyNode);
-                } else {
-                    return new NullStrategy(strategyNode);
+
+                switch (strategyNode.get("strategy").asText()) {
+                    case CullOnConfirmation.name:
+                        return new CullOnConfirmation(strategyNode);
+                    case CullOnSuspicion.name:
+                        return new CullOnSuspicion(strategyNode);
+                    case MovementRestriction.name:
+                        return new MovementRestriction(strategyNode);
+                    case GlobalMovementRestriction.name:
+                        return new GlobalMovementRestriction(strategyNode);
+                    case CullOnConfirmationWithRing.name:
+                        return new CullOnConfirmationWithRing(strategyNode);
+                    case VaccinateOnConfirmation.name:
+                        return new VaccinateOnConfirmation(strategyNode);
+                    case VaccinateOnSuspicion.name:
+                        return new VaccinateOnSuspicion(strategyNode);
+                    case RingVaccination.name:
+                        return new RingVaccination(strategyNode);
+                    default:
+                        return new NullStrategy();
                 }
-            } catch (IOException ex) {
+
+        }catch (IOException ex) {
                 // TODO: 
                 System.out.println("Exception : " + ex.getLocalizedMessage());
             }
-        }
-        return new NullStrategy();
     }
-	
-	/**
-     * Create the appropriate control strategy given its name and a json formatted string of parameters.
-     * @param strategyJson a json formatted string with the parameters for the strategy.
-     * @return the control strategy object.
-     */
-    public static ControlStrategy create(final int culling, final int vaccinate, final double vacradius) {
 
-		return new CullVacCombi(culling, vaccinate, vacradius);
+    return new NullStrategy();
+}
+
+/**
+ * Create the appropriate control strategy given its name and a json formatted string of parameters.
+ * @param strategyJson a json formatted string with the parameters for the strategy.
+ * @return the control strategy object.
+ */
+public static ControlStrategy create(final int culling, final int vaccinate, final double vacradius) {
+
+        return new CullVacCombi(culling, vaccinate, vacradius);
     }
 }

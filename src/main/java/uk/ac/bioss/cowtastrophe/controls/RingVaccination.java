@@ -76,11 +76,16 @@ public class RingVaccination extends ControlStrategy implements Serializable {
                                                .getCostOfVaccinatingAnimal());
         }
     }
+    
+    /**
+     * A public identifier (name) of the strategy.
+     */
+    public static final String name = "Ring_vaccination";
 
     private final Map<Integer, Double> ring;
 
     /**
      * The serialVersionUID.
      */
-    private static final long serialVersionUID = 2283289317430294766L;
+    private static final long serialVersionUID = 1182389317430294766L;
 }
