@@ -42,9 +42,7 @@ public class PopulationManager implements AmountManager, Serializable {
             Farm infectedFarm = (Farm) event.getFinalState();
 
             // Set the farm as being infectious and update the caches
-            simulation.getSusceptibleFarms().remove(infectedFarm);
             infectedFarm.setStatus(DiseaseState.SUSPECTED);
-            simulation.getSuspectedFarms().add(infectedFarm);
 
             // We have a suspected case now on <infectedFarm> schedule a visit to confirm the
             // outbreak on day+1 (the day after it was suspected).

@@ -29,8 +29,6 @@ public class CullOnConfirmation extends ControlStrategy implements Serializable 
         for (Farm farm : toBeCulled) {
             farm.setDayCulled(simulation.getDay());
             farm.setStatus(DiseaseState.CULLED);
-            simulation.getConfirmedFarms().remove(farm);
-            simulation.getCulledFarms().add(farm);
             simulation.getStatistics().addCost(simulation.getDay(),
                                                farm.getHerdSize() * simulation.getParameters().getCostOfCullingAnimal()
                                                + simulation.getParameters().getCostOfFarmVisit());

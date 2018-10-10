@@ -16,7 +16,9 @@ public class CullVacCombi extends ControlStrategy implements Serializable {
 
     /**
      * Create the control strategy using the JSON formatted string.
-     * @param params the parameters for the control.
+     * @param cull
+     * @param vacc
+     * @param vacrad
      */
     public CullVacCombi(final int cull, final int vacc, final double vacrad) {
         log.info("Using CullVac Combi Strategy");
@@ -44,8 +46,6 @@ public class CullVacCombi extends ControlStrategy implements Serializable {
         for (Farm farm : toBeCulled) {
             farm.setDayCulled(simulation.getDay());
             farm.setStatus(DiseaseState.CULLED);
-            simulation.getConfirmedFarms().remove(farm);
-            simulation.getCulledFarms().add(farm);
             simulation.getStatistics().addCost(simulation.getDay(),
                                                farm.getHerdSize() * simulation.getParameters().getCostOfCullingAnimal()
                                                + simulation.getParameters().getCostOfFarmVisit());
@@ -70,10 +70,6 @@ public class CullVacCombi extends ControlStrategy implements Serializable {
         for (Farm farm : toBeVaccinated) {
             farm.setDayVaccinated(simulation.getDay());
             farm.setStatus(DiseaseState.VACCINATED);
-            simulation.getConfirmedFarms().remove(farm);
-            simulation.getSuspectedFarms().remove(farm);
-            simulation.getSusceptibleFarms().remove(farm);
-            simulation.getVaccinatedFarms().add(farm);
             simulation.getStatistics().addCost(simulation.getDay(),
                                                farm.getHerdSize() * simulation.getParameters()
                                                .getCostOfVaccinatingAnimal());

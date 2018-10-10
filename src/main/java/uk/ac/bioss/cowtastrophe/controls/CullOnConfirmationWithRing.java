@@ -33,12 +33,7 @@ public class CullOnConfirmationWithRing extends ControlStrategy implements Seria
         
         for (Farm farm : toBeCulled) {
             // Note: we are vaccinating farms within a ring so there may be suspected and susceptible
-            // farms that we are vaccinating, so we must update these lists also.
-            simulation.getSusceptibleFarms().remove(farm);
-            simulation.getSuspectedFarms().remove(farm);
-            simulation.getConfirmedFarms().remove(farm);
-            simulation.getVaccinatedFarms().remove(farm);
-            simulation.getCulledFarms().add(farm);
+            // farms that we are vaccinating
             farm.setDayCulled(simulation.getDay());
             farm.setStatus(DiseaseState.CULLED);
             simulation.getStatistics().addCost(simulation.getDay(),

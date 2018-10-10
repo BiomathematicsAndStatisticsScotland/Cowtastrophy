@@ -67,10 +67,6 @@ public class RingVaccination extends ControlStrategy implements Serializable {
         for (Farm farm : toBeVaccinated) {
             farm.setDayVaccinated(simulation.getDay());
             farm.setStatus(DiseaseState.VACCINATED);
-            simulation.getConfirmedFarms().remove(farm);
-            simulation.getSuspectedFarms().remove(farm);
-            simulation.getSusceptibleFarms().remove(farm);
-            simulation.getVaccinatedFarms().add(farm);
             simulation.getStatistics().addCost(simulation.getDay(),
                                                farm.getHerdSize() * simulation.getParameters()
                                                .getCostOfVaccinatingAnimal());

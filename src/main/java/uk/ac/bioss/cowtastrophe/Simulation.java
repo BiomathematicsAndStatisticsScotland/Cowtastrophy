@@ -16,13 +16,11 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.TreeSet;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
@@ -35,7 +33,7 @@ public class Simulation implements Serializable {
 
     /**
      * Create a simulation from a set of parameters.
-     * @param directory the directory where the output is to be stored.
+     * @param directory      the directory where the output is to be stored.
      * @param paramsFileName the name of the file containing the parameters with which to run the simulation.
      */
     public Simulation(final String directory, final String paramsFileName) {
@@ -44,11 +42,6 @@ public class Simulation implements Serializable {
         this.parameters = new Parameters(paramsFileName);
         this.parameters.setDirectory(directory);
         this.farms = new HashSet<>(this.parameters.getFarms());
-        this.suspectedFarms = new HashSet<>();
-        this.confirmedFarms = new HashSet<>();
-        this.culledFarms = new HashSet<>();
-        this.susceptibleFarms = new HashSet<>();
-        this.vaccinatedFarms = new HashSet<>();
         this.restrictedFarms = new HashSet<>();
         this.SuspisciousFarmTests = new HashMap<>();
         this.easeMvmtRestriction = new HashMap<>();
@@ -66,17 +59,6 @@ public class Simulation implements Serializable {
                 f.setStatus(DiseaseState.SUSPECTED);
             }
         }
-
-        // Now we have the farms we will update the caches.
-        susceptibleFarms.addAll(farms.stream()
-                .filter(f -> f.getStatus() == DiseaseState.SUSCEPTIBLE)
-                .collect(Collectors.toList()));
-        suspectedFarms.addAll(farms.stream()
-                .filter(f -> f.getStatus() == DiseaseState.SUSPECTED)
-                .collect(Collectors.toList()));
-        confirmedFarms.addAll(farms.stream()
-                .filter(f -> f.getStatus() == DiseaseState.CONFIRMED)
-                .collect(Collectors.toList()));
 
         // Create the sessionId for the session and create the directory to hold it.
         sessionId = helper.generateSessionId();
@@ -97,7 +79,7 @@ public class Simulation implements Serializable {
         this.simulator.setStartTime(day);
 
         // register all suspected farms on day 0 to be checked.
-        for (Farm farm : suspectedFarms) {
+        for (Farm farm : getSuspectedFarms()) {
             Collection<Event> scheduledTests = this.getSuspisciousFarmTests()
                     .getOrDefault(day + 1, new ArrayList<>());
             scheduledTests.add(new Event(farm, farm, Event.Type.TEST));
@@ -127,7 +109,6 @@ public class Simulation implements Serializable {
         };
         this.simulator.setController(controller);
 
-		
         // finally create the transition kernel
         this.kernel = updateKernel();
         this.simulator.setTransitionKernel(kernel);
@@ -137,26 +118,31 @@ public class Simulation implements Serializable {
         controlStrategy.run(this);
         doDailyChecks();
 
-        statistics.setSusceptibleFarms(day, susceptibleFarms.size());
-        statistics.addSuspectedFarms(day, suspectedFarms.size());
-        statistics.addConfirmedFarms(day, confirmedFarms.size());
-        statistics.addCulledFarms(day, culledFarms.size());
-        statistics.addVaccinatedFarms(day, vaccinatedFarms.size());
-        //statistics.addCost(time, 0.0); // TODO - update this when the controls have been encoded.
-        
-        log.info("Suspected Farms = {} ", new TreeSet(suspectedFarms.stream()
-            .map(Farm::getId)
-            .collect(Collectors.toList())));
-        log.info("Confirmed Farms = {} ", new TreeSet(confirmedFarms.stream()
-            .map(Farm::getId)
-            .collect(Collectors.toList())));
-        log.info("Culled Farms = {} ", new TreeSet(culledFarms.stream()
-            .map(Farm::getId)
-            .collect(Collectors.toList())));
-        log.info("Vaccinated Farms = {} ", new TreeSet(vaccinatedFarms.stream()
-            .map(Farm::getId)
-            .collect(Collectors.toList())));
+        statistics.addCost(day, 0.0); // TODO - update this when the controls have been encoded.
 
+        log.info("Suspected Farms = {} ", farms.stream()
+                 .filter((farm) -> (farm.getStatus() == DiseaseState.SUSPECTED))
+                 .map(Farm::getId)
+                 .sorted()
+                 .collect(Collectors.toList()));
+        log.info("Confirmed Farms = {} ", farms.stream()
+                 .filter((farm) -> (farm.getStatus() == DiseaseState.CONFIRMED))
+                 .map(Farm::getId)
+                 .sorted()
+                 .collect(Collectors.toList()));
+        log.info("Culled Farms = {} ", farms.stream()
+                 .filter((farm) -> (farm.getStatus() == DiseaseState.CULLED))
+                 .map(Farm::getId)
+                 .sorted()
+                 .collect(Collectors.toList()));
+        log.info("Vaccinated Farms = {} ", farms.stream()
+                 .filter((farm) -> (farm.getStatus() == DiseaseState.VACCINATED))
+                 .map(Farm::getId)
+                 .sorted()
+                 .collect(Collectors.toList()));
+
+        // TODO: we should now ask the statistics to update itself......
+        
         log.info("Finished simulation for day {} [next infection event at = {}]",
                  day,
                  this.simulator.getCurrentTime());
@@ -186,9 +172,9 @@ public class Simulation implements Serializable {
                     log.trace("Testing farm {} at time {} [cost = {}]", suspectedFarm, day, cost);
                     if (DiseaseState.SUSPECTED == suspectedFarm.getStatus()) {
                         // this should always be the case, but checking to be sure!
-                        suspectedFarms.remove(suspectedFarm);
+//                        suspectedFarms.remove(suspectedFarm);
                         suspectedFarm.setStatus(DiseaseState.CONFIRMED);
-                        confirmedFarms.add(suspectedFarm);
+//                        confirmedFarms.add(suspectedFarm);
                         log.info("Farm {} confirmed.", suspectedFarm.getId());
                     }
                 }
@@ -262,8 +248,14 @@ public class Simulation implements Serializable {
         TransitionKernel kern = simulator.getTransitionKernel();
 
         kern.clear();
-        Stream<Farm> infectedFarms = Stream.concat(suspectedFarms.stream(),
-                                                   confirmedFarms.stream());
+        List<Farm> infectedFarms = farms.stream()
+                .filter((farm) -> (farm.getStatus() == DiseaseState.SUSPECTED)
+                                  || (farm.getStatus() == DiseaseState.CONFIRMED))
+                .collect(Collectors.toList());
+        
+        List<Farm> susceptibleFarms = farms.stream()
+                .filter((farm) -> (farm.getStatus() == DiseaseState.SUSCEPTIBLE))
+                .collect(Collectors.toList());
 
         infectedFarms.forEach((infected) -> {
             susceptibleFarms.forEach((susceptible) -> {
@@ -295,15 +287,45 @@ public class Simulation implements Serializable {
 
         jsFile.append("{");
         jsFile.append("\"session_id\": \"").append(sessionId).append("\", ");
-        jsFile.append("\"timeframe\": \"").append(day+1).append("\", ");
+        jsFile.append("\"timeframe\": \"").append(day + 1).append("\", ");
         jsFile.append("\"farms\": [");
 
         jsFile.append(farms.stream().map(Farm::asJson)
                 .collect(Collectors.joining(", ")));
         jsFile.append("]");
         jsFile.append("}");
-        
+
         return jsFile.toString();
+    }
+
+    /**
+     * Get a collection of farms (a java.util.Set) which are labelled as SUSPECTED.
+     * @return a a java.util.Set of SUSPECTED farms.
+     */
+    public final Set<Farm> getSuspectedFarms() {
+        return farms.stream()
+                .filter((farm) -> (farm.getStatus() == DiseaseState.SUSPECTED))
+                .collect(Collectors.toSet());
+    }
+
+    /**
+     * Get a collection of farms (a java.util.Set) which are labelled as CONFIRMED.
+     * @return a a java.util.Set of CONFIRMED farms.
+     */
+    public final Set<Farm> getConfirmedFarms() {
+        return farms.stream()
+                .filter((farm) -> (farm.getStatus() == DiseaseState.CONFIRMED))
+                .collect(Collectors.toSet());
+    }
+
+    /**
+     * Get a collection of farms (a java.util.Set) which are labelled as VACCINATED.
+     * @return a a java.util.Set of VACCINATED farms.
+     */
+    public final Set<Farm> getVaccinatedFarms() {
+        return farms.stream()
+                .filter((farm) -> (farm.getStatus() == DiseaseState.VACCINATED))
+                .collect(Collectors.toSet());
     }
 
     @JsonIgnore
@@ -320,16 +342,6 @@ public class Simulation implements Serializable {
     @JsonIgnore
     @Getter
     private final Set<Farm> farms;
-    @Getter
-    private final Set<Farm> suspectedFarms;
-    @Getter
-    private final Set<Farm> confirmedFarms;
-    @Getter
-    private final Set<Farm> culledFarms;
-    @Getter
-    private final Set<Farm> susceptibleFarms;
-    @Getter
-    private final Set<Farm> vaccinatedFarms;
     @Getter
     private final Set<Integer> restrictedFarms;
     private final PopulationManager manager;
@@ -348,5 +360,5 @@ public class Simulation implements Serializable {
     private boolean isthreadRunning;
     private final int rngSeed;
 
-    private static final long serialVersionUID = 32345527169572885L;
+    private static final long serialVersionUID = 32345527169572888L;
 }
