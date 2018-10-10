@@ -2,14 +2,10 @@ package uk.ac.bioss.cowtastrophe;
 
 import broadwick.utils.Pair;
 import java.io.Serializable;
-import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Comparator;
 import java.util.LinkedHashSet;
 import java.util.Map;
-import java.util.Optional;
 import java.util.TreeMap;
-import java.util.stream.Stream;
 
 /**
  * A class to store the statistics (number of infected farms etc.) in the simulation.
