@@ -113,9 +113,7 @@ public class Simulation implements Serializable {
         this.kernel = updateKernel();
         this.simulator.setTransitionKernel(kernel);
         this.simulator.run();
-        // TODO: controlStrategy will be an array in the future and we will iterate over it
-        // calling run on each control.
-        controlStrategy.run(this);
+
         doDailyChecks();
 
         statistics.addCost(day, 0.0); // TODO - update this when the controls have been encoded.
@@ -156,6 +154,15 @@ public class Simulation implements Serializable {
      * confirmed.
      */
     private void doDailyChecks() {
+        
+        // running the control strategy BEFORE any testing will ensure that suspected farms are
+        // detected and dealt with, measures on confirmed cases will be missed until the next day
+        // (unless we move the control strategy after the tests, in which case the suspected farms 
+        // will not be controlled but confirmed cases will, OR we run the control again AFTER the test
+        // block).
+
+        controlStrategy.run(this);
+        
         //First: check all suspected farms and mark them as confirmed.
         if (SuspisciousFarmTests.get(this.getDay()) != null) {
             Collection<Event> todaysTests = new HashSet(SuspisciousFarmTests.get(this.getDay()));
