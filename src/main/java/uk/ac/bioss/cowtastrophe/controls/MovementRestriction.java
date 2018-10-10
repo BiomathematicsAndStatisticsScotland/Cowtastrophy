@@ -10,6 +10,7 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 import uk.ac.bioss.cowtastrophe.ControlStrategy;
 import uk.ac.bioss.cowtastrophe.Farm;
@@ -62,6 +63,11 @@ public class MovementRestriction extends ControlStrategy implements Serializable
 
             List<Farm> allFarms = simulation.getHelper().getAllFarmsWithindistance(thisFarm, radius);
 
+            log.trace("Farms to be placed under restriction {}", allFarms.stream()
+                      .map(Farm::getId)
+                      .sorted()
+                      .collect(Collectors.toList()));
+
             for (Farm farm : allFarms) {
                 simulation.getRestrictedFarms().add(farm.getId());
                 simulation.getStatistics().addCost(simulation.getDay(),
@@ -76,14 +82,14 @@ public class MovementRestriction extends ControlStrategy implements Serializable
             }
         }
     }
-    
+
     /**
      * A public identifier (name) of the strategy.
      */
     public static final String name = "Movement_restriction";
-    
+
     private final Map<Integer, MovementRestriction.Params> restrictions;
-    
+
     /**
      * The serialVersionUID.
      */

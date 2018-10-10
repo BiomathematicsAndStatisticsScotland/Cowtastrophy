@@ -8,6 +8,7 @@ package uk.ac.bioss.cowtastrophe.controls;
 import com.fasterxml.jackson.databind.JsonNode;
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 import uk.ac.bioss.cowtastrophe.ControlStrategy;
 import uk.ac.bioss.cowtastrophe.DiseaseState;
@@ -36,6 +37,11 @@ public class VaccinateOnConfirmation extends ControlStrategy implements Serializ
             toBeVaccinated.addAll(simulation.getHelper().getAllFarmsWithindistance(farm, radius));
         }
 
+        log.trace("Farms to be vaccinated {}", toBeVaccinated.stream()
+                  .map(Farm::getId)
+                  .sorted()
+                  .collect(Collectors.toList()));
+
         for (Farm farm : toBeVaccinated) {
             if (farm.getStatus() != DiseaseState.CULLED) {
                 // Note: we are vaccinating farms within a ring so there may be suspected and susceptible
@@ -48,12 +54,11 @@ public class VaccinateOnConfirmation extends ControlStrategy implements Serializ
             }
         }
     }
-    
+
     /**
      * A public identifier (name) of the strategy.
      */
     public static final String name = "Vaccinate_on_confirmation";
-    
 
     private final double radius;
 

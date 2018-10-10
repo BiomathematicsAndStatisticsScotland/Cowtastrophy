@@ -2,6 +2,7 @@ package uk.ac.bioss.cowtastrophe.controls;
 
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 import uk.ac.bioss.cowtastrophe.ControlStrategy;
 import uk.ac.bioss.cowtastrophe.DiseaseState;
@@ -37,12 +38,19 @@ public class CullVacCombi extends ControlStrategy implements Serializable {
         if (culling == ControlStrategy.CULL_NOT) {
             return;
         }
+        
         ArrayList<Farm> toBeCulled;
         if (culling == ControlStrategy.CULL_ON_CON) {
             toBeCulled = new ArrayList<>(simulation.getConfirmedFarms());
         } else {
             toBeCulled = new ArrayList<>(simulation.getSuspectedFarms());
         }
+
+        log.trace("Farms to be culled {}", toBeCulled.stream()
+                  .map(Farm::getId)
+                  .sorted()
+                  .collect(Collectors.toList()));
+
         for (Farm farm : toBeCulled) {
             farm.setDayCulled(simulation.getDay());
             farm.setStatus(DiseaseState.CULLED);
@@ -56,6 +64,7 @@ public class CullVacCombi extends ControlStrategy implements Serializable {
         if (vaccinate == ControlStrategy.VAC_NOT) {
             return;
         }
+        
         ArrayList<Farm> toBeVaccinated = new ArrayList<>();
         if (vaccinate == ControlStrategy.VAC_ON_CON) {
             for (Farm farm : simulation.getConfirmedFarms()) {
@@ -66,7 +75,12 @@ public class CullVacCombi extends ControlStrategy implements Serializable {
                 toBeVaccinated.addAll(simulation.getHelper().getAllFarmsWithindistance(farm, vacradius));
             }
         }
-        log.info("doVac - " + toBeVaccinated.size());
+        
+        log.trace("Farms to be vaccinated {}", toBeVaccinated.stream()
+                  .map(Farm::getId)
+                  .sorted()
+                  .collect(Collectors.toList()));
+
         for (Farm farm : toBeVaccinated) {
             farm.setDayVaccinated(simulation.getDay());
             farm.setStatus(DiseaseState.VACCINATED);
@@ -75,7 +89,7 @@ public class CullVacCombi extends ControlStrategy implements Serializable {
                                                .getCostOfVaccinatingAnimal());
         }
     }
-    
+
     /**
      * A public identifier (name) of the strategy.
      */

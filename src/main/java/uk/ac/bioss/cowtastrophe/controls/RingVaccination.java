@@ -8,6 +8,7 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 import uk.ac.bioss.cowtastrophe.ControlStrategy;
 import uk.ac.bioss.cowtastrophe.DiseaseState;
@@ -53,7 +54,6 @@ public class RingVaccination extends ControlStrategy implements Serializable {
     @Override
     public final void run(final Simulation simulation) {
         ArrayList<Farm> toBeVaccinated = new ArrayList<>(simulation.getConfirmedFarms());
-
         for (Map.Entry<Integer, Double> entry : ring.entrySet()) {
             final int farmId = entry.getKey();
             final Farm farm = simulation.getHelper().getFarmById(farmId);
@@ -63,6 +63,11 @@ public class RingVaccination extends ControlStrategy implements Serializable {
                 toBeVaccinated.add(farm2);
             });
         }
+        
+        log.trace("Farms to be vaccinated {}", toBeVaccinated.stream()
+                  .map(Farm::getId)
+                  .sorted()
+                  .collect(Collectors.toList()));
 
         for (Farm farm : toBeVaccinated) {
             farm.setDayVaccinated(simulation.getDay());
@@ -72,7 +77,7 @@ public class RingVaccination extends ControlStrategy implements Serializable {
                                                .getCostOfVaccinatingAnimal());
         }
     }
-    
+
     /**
      * A public identifier (name) of the strategy.
      */

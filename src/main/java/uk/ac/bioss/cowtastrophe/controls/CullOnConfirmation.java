@@ -3,6 +3,7 @@ package uk.ac.bioss.cowtastrophe.controls;
 import com.fasterxml.jackson.databind.JsonNode;
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 import uk.ac.bioss.cowtastrophe.ControlStrategy;
 import uk.ac.bioss.cowtastrophe.DiseaseState;
@@ -26,6 +27,12 @@ public class CullOnConfirmation extends ControlStrategy implements Serializable 
     @Override
     public final void run(final Simulation simulation) {
         ArrayList<Farm> toBeCulled = new ArrayList<>(simulation.getConfirmedFarms());
+        
+        log.trace("Confirmed farms to be culled {}", toBeCulled.stream()
+                 .map(Farm::getId)
+                 .sorted()
+                 .collect(Collectors.toList()));
+        
         for (Farm farm : toBeCulled) {
             farm.setDayCulled(simulation.getDay());
             farm.setStatus(DiseaseState.CULLED);

@@ -8,6 +8,7 @@ package uk.ac.bioss.cowtastrophe.controls;
 import com.fasterxml.jackson.databind.JsonNode;
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 import uk.ac.bioss.cowtastrophe.ControlStrategy;
 import uk.ac.bioss.cowtastrophe.DiseaseState;
@@ -36,6 +37,11 @@ public class VaccinateOnSuspicion extends ControlStrategy implements Serializabl
         for (Farm farm : simulation.getSuspectedFarms()) {
             toBeVaccinated.addAll(simulation.getHelper().getAllFarmsWithindistance(farm, radius));
         }
+
+        log.trace("Farms to be vaccinated {}", toBeVaccinated.stream()
+                  .map(Farm::getId)
+                  .sorted()
+                  .collect(Collectors.toList()));
 
         for (Farm farm : toBeVaccinated) {
             if (farm.getStatus() != DiseaseState.CULLED) {
