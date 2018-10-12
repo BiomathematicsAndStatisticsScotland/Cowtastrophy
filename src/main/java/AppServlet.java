@@ -125,6 +125,7 @@ public class AppServlet extends HttpServlet {
 		printRequest(request);
 		// This is an example of what must be done to set the simulation code up
         if (simulation == null) {
+			log.info("doPost - init()");
             init();
             for (Map.Entry<String, String[]> entry : request.getParameterMap().entrySet()) {
                 String[] get = entry.getValue();
@@ -132,12 +133,14 @@ public class AppServlet extends HttpServlet {
                     log.info("{} = {} ", entry.getKey(), str);
                 }
             }
-            simulation = new Simulation(this.getServletConfig().getInitParameter("BaseDirectory"),
-                                        this.getServletConfig().getInitParameter("SettingsFile"));
+            //simulation = new Simulation(this.getServletConfig().getInitParameter("BaseDirectory"),
+            //                            this.getServletConfig().getInitParameter("SettingsFile"));
         }
 		String ses = request.getParameter("session_id");
 		if(ses == null || "".equals(ses)){
 			log.info("empty session..");
+			simulation = new Simulation(this.getServletConfig().getInitParameter("BaseDirectory"),
+                                        this.getServletConfig().getInitParameter("SettingsFile"));
 		} else {
 			String tf = request.getParameter("timeframe");
 			String basedir = this.getServletConfig().getInitParameter("BaseDirectory");
