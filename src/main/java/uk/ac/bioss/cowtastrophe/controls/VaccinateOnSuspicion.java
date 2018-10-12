@@ -50,7 +50,7 @@ public class VaccinateOnSuspicion extends ControlStrategy implements Serializabl
                 farm.setDayVaccinated(simulation.getDay());
                 farm.setStatus(DiseaseState.VACCINATED);
                 simulation.getStatistics().addCost(simulation.getDay(),
-                                                   farm.getHerdSize() * simulation.getParameters().getCostOfCullingAnimal()
+                                                   farm.getHerdSize() * simulation.getParameters().getCostOfVaccinatingAnimal()
                                                    + simulation.getParameters().getCostOfFarmVisit());
             }
         }
