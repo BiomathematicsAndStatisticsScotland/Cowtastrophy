@@ -336,6 +336,16 @@ public class Simulation implements Serializable {
                 .filter((farm) -> (farm.getStatus() == DiseaseState.CONFIRMED))
                 .collect(Collectors.toSet());
     }
+	
+	/**
+     * Get a collection of farms (a java.util.Set) which are labelled as CONFIRMED or SUSPECTED.
+     * @return a a java.util.Set of CONFIRMED or SUSPECTED farms.
+     */
+    public final Set<Farm> getSuspectedOrConfirmedFarms() {
+        return farms.stream()
+                .filter((farm) -> (farm.getStatus() == DiseaseState.CONFIRMED || farm.getStatus() == DiseaseState.SUSPECTED))
+                .collect(Collectors.toSet());
+    }
 
     /**
      * Get a collection of farms (a java.util.Set) which are labelled as VACCINATED.
