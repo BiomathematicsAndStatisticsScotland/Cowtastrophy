@@ -27,12 +27,13 @@ public class CullOnSuspicion extends ControlStrategy implements Serializable {
     @Override
     public final void run(final Simulation simulation) {
         ArrayList<Farm> toBeCulled = new ArrayList<>(simulation.getSuspectedFarms());
-
-        log.trace("Suspected farms to be culled {}", toBeCulled.stream()
-                 .map(Farm::getId)
-                 .sorted()
-                 .collect(Collectors.toList()));
+        toBeCulled.addAll(simulation.getConfirmedFarms());
         
+        log.trace("Suspected farms to be culled {}", toBeCulled.stream()
+                  .map(Farm::getId)
+                  .sorted()
+                  .collect(Collectors.toList()));
+
         for (Farm farm : toBeCulled) {
             farm.setDayCulled(simulation.getDay());
             farm.setStatus(DiseaseState.CULLED);
@@ -41,12 +42,12 @@ public class CullOnSuspicion extends ControlStrategy implements Serializable {
                                                + simulation.getParameters().getCostOfFarmVisit());
         }
     }
-    
+
     /**
      * A public identifier (name) of the strategy.
      */
     public static final String name = "Cull_on_suspicion";
-    
+
     /**
      * The serialVersionUID.
      */
