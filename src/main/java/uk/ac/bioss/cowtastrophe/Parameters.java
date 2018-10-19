@@ -45,7 +45,7 @@ public class Parameters implements Serializable {
             JsonNode json = mapper.readTree(input);
             Parameters params = mapper.treeToValue(json.get("parameters"), Parameters.class);
             
-            this.directory = params.getDirectory();
+            this.directory = ""; // this will be set by the Simulation.
             this.beta = params.getBeta();
             this.endTime = params.getEndTime();
             this.costOfFarmVisit = params.getCostOfFarmVisit();
@@ -149,5 +149,5 @@ public class Parameters implements Serializable {
         @Getter
     private final List<Farm> seedFarms = new ArrayList<>();
     /** The serialVersionUID. */
-    private static final long serialVersionUID = 1859289310330274528L;
+    private static final long serialVersionUID = 1859289310330274520L;
 }
