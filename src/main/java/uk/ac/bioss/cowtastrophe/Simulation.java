@@ -9,6 +9,8 @@ import broadwick.stochastic.algorithms.GillespieSimple;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import java.io.File;
 import java.io.Serializable;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -50,6 +52,7 @@ public class Simulation implements Serializable {
         this.statistics = new Statistics();
         this.controlStrategy = new NullStrategy();
         this.rngSeed = new RNG(RNG.Generator.Well19937c).getInteger(0, Integer.MAX_VALUE - 1);
+        this.cleanupRequired = true;
 
         // Find all the farms whose id is in the list of seedIds and set them to be INFECTIOUS.
         List<Integer> seedIds = this.parameters.getSeedFarms().stream().map(Farm::getId)
@@ -96,9 +99,10 @@ public class Simulation implements Serializable {
      * Run the simulation for the next 24 hours.
      */
     public final void run24Hours() {
-        // TODO: add member daysSinceLastSuspectedCase;
-        // run the simulation for 24 hours.
         log.info("Running simulation for day {}", day);
+        cleanupDataFiles();
+
+        dayWithEvents = false;
 
         simulator.setStartTime(this.simulator.getCurrentTime());
 
@@ -114,10 +118,15 @@ public class Simulation implements Serializable {
         this.simulator.setTransitionKernel(kernel);
         this.simulator.run();
 
-        doDailyChecks();
-
         statistics.addCost(day, 0.0); // TODO - update this when the controls have been encoded.
 
+        doDailyChecks();
+
+        log.info("Susceptible Farms = {} ", farms.stream()
+                 .filter((farm) -> (farm.getStatus() == DiseaseState.SUSCEPTIBLE))
+                 .map(Farm::getId)
+                 .sorted()
+                 .collect(Collectors.toList()));
         log.info("Suspected Farms = {} ", farms.stream()
                  .filter((farm) -> (farm.getStatus() == DiseaseState.SUSPECTED))
                  .map(Farm::getId)
@@ -140,62 +149,20 @@ public class Simulation implements Serializable {
                  .collect(Collectors.toList()));
 
         // TODO: we should now ask the statistics to update itself......
-        
         log.info("Finished simulation for day {} [next infection event at = {}]",
                  day,
                  this.simulator.getCurrentTime());
+
         log.trace("Scheduled tests: {}", SuspisciousFarmTests.toString());
         day += 1; // update the time by one day...
+
         helper.saveSession(sessionId, day);
-    }
 
-    /**
-     * Run the tests that are scheduled for the current day. These tests check suspected farms and mark them as
-     * confirmed.
-     */
-    private void doDailyChecks() {
-        
-        // running the control strategy BEFORE any testing will ensure that suspected farms are
-        // detected and dealt with, measures on confirmed cases will be missed until the next day
-        // (unless we move the control strategy after the tests, in which case the suspected farms 
-        // will not be controlled but confirmed cases will, OR we run the control again AFTER the test
-        // block).
-
-        controlStrategy.run(this);
-        
-        //First: check all suspected farms and mark them as confirmed.
-        if (SuspisciousFarmTests.get(this.getDay()) != null) {
-            Collection<Event> todaysTests = new HashSet(SuspisciousFarmTests.get(this.getDay()));
-            if (todaysTests != null) {
-                log.info("Testing {} suspected farms on day {} (next infection event at = {})",
-                         todaysTests.size(), day, simulator.getCurrentTime());
-                for (final Object eventObj : todaysTests) {
-                    Event event = (Event) eventObj;
-
-                    Farm suspectedFarm = (Farm) event.getInitialState();
-                    final double cost = parameters.getCostOfFarmVisit()
-                                        + parameters.getCostOfTestPerAnimal() * suspectedFarm.getHerdSize();
-                    statistics.addCost(day, cost);
-                    log.trace("Testing farm {} at time {} [cost = {}]", suspectedFarm, day, cost);
-                    if (DiseaseState.SUSPECTED == suspectedFarm.getStatus()) {
-                        // this should always be the case, but checking to be sure!
-//                        suspectedFarms.remove(suspectedFarm);
-                        suspectedFarm.setStatus(DiseaseState.CONFIRMED);
-//                        confirmedFarms.add(suspectedFarm);
-                        log.info("Farm {} confirmed.", suspectedFarm.getId());
-                    }
-                }
-                // cleaning up - removing these tests from the map!
-                SuspisciousFarmTests.remove(day);
-            }
-        }
-
-        //Second: check if any farms that have a movement ban can have the ban lifted.
-        Collection<Integer> todaysLifts = easeMvmtRestriction.get(this.getDay());
-        if (todaysLifts != null) {
-            for (int farmId : todaysLifts) {
-                restrictedFarms.remove(farmId);
-            }
+        // Keep running until we have a day with events (in case there are situations where there
+        // are no events for several days)
+        if (!dayWithEvents) {
+            // we've  had no events today so try tomorrow and keep going until we have had a day with events.
+            run24Hours();
         }
     }
 
@@ -204,14 +171,17 @@ public class Simulation implements Serializable {
      * change when connected to the servlet as we don't want the application to hang.
      */
     public final void run() {
-        final int end = this.parameters.getEndTime();
+        cleanupDataFiles();
+
+        // todo: remove all the .ser nd .json files that have a day > today.
         log.info("Parameters = {}", parameters.toString());
         helper.savePid(sessionId);
 
         ExecutorService executorService = Executors.newSingleThreadExecutor();
         Future<?> result = executorService.submit(() -> {
-            isthreadRunning = true;
-            while (day < end) {
+            threadRunning = true;
+            while (this.simulator.getTransitionKernel().getTransitionEvents().size() > 0) {
+                // i.e. there are more events
                 run24Hours();
             }
         });
@@ -238,6 +208,75 @@ public class Simulation implements Serializable {
     }
 
     /**
+     * Run the tests that are scheduled for the current day. These tests check suspected farms and mark them as
+     * confirmed.
+     */
+    private void doDailyChecks() {
+
+        // running the control strategy BEFORE any testing will ensure that suspected farms are
+        // detected and dealt with, measures on confirmed cases will be missed until the next day
+        // (unless we move the control strategy after the tests, in which case the suspected farms 
+        // will not be controlled but confirmed cases will, OR we run the control again AFTER the test
+        // block).
+        controlStrategy.run(this);
+
+        //First: check all suspected farms and mark them as confirmed.
+        if (SuspisciousFarmTests.get(this.getDay()) != null) {
+            Collection<Event> todaysTests = new HashSet(SuspisciousFarmTests.get(this.getDay()));
+            if (todaysTests != null) {
+                log.info("Testing {} suspected farms on day {} (next infection event at = {})",
+                         todaysTests.size(), day, simulator.getCurrentTime());
+                for (final Object eventObj : todaysTests) {
+                    Event event = (Event) eventObj;
+
+                    Farm suspectedFarm = (Farm) event.getInitialState();
+                    final double cost = parameters.getCostOfFarmVisit()
+                                        + parameters.getCostOfTestPerAnimal() * suspectedFarm.getHerdSize();
+                    statistics.addCost(day, cost);
+                    log.trace("Testing farm {} at time {} [cost = {}]", suspectedFarm, day, cost);
+                    if (DiseaseState.SUSPECTED == suspectedFarm.getStatus()) {
+                        suspectedFarm.setStatus(DiseaseState.CONFIRMED);
+                        log.info("Farm {} confirmed.", suspectedFarm.getId());
+                    }
+                }
+                // cleaning up - removing these tests from the map!
+                SuspisciousFarmTests.remove(day);
+            }
+        }
+
+        //Second: check if any farms that have a movement ban can have the ban lifted.
+        Collection<Integer> todaysLifts = easeMvmtRestriction.get(this.getDay());
+        if (todaysLifts != null) {
+            for (int farmId : todaysLifts) {
+                restrictedFarms.remove(farmId);
+            }
+        }
+    }
+
+    /**
+     * Remove all the .ser nd .json files that have a day > today.
+     */
+    private void cleanupDataFiles() {
+        if (cleanupRequired) {
+            Path path = Paths.get(parameters.getDirectory()).resolve(this.sessionId);
+            File[] files = path.toFile().listFiles((d, name) -> name.startsWith(sessionId)
+                                                                && name.endsWith(".ser"));
+
+            for (File file : files) {
+                String dataDay = file.getName().replace(sessionId+"_", "").replace(".0.ser", "");
+                int fileDay = Integer.parseInt(dataDay);
+                if (fileDay > day) {
+                    log.info("Deleting previous file {} and associated json file", file);
+                    file.delete();
+                    (new File(file.toString().replace(".0.ser", ".0.json"))).delete();
+                }
+            }
+
+            cleanupRequired = false; // do not cleanup files for every run.
+        }
+    }
+
+    /**
      * Finalise the application.
      */
     public final void finalise() {
@@ -253,13 +292,13 @@ public class Simulation implements Serializable {
      */
     public final TransitionKernel updateKernel() {
         TransitionKernel kern = simulator.getTransitionKernel();
-
         kern.clear();
+
         List<Farm> infectedFarms = farms.stream()
                 .filter((farm) -> (farm.getStatus() == DiseaseState.SUSPECTED)
                                   || (farm.getStatus() == DiseaseState.CONFIRMED))
                 .collect(Collectors.toList());
-        
+
         List<Farm> susceptibleFarms = farms.stream()
                 .filter((farm) -> (farm.getStatus() == DiseaseState.SUSCEPTIBLE))
                 .collect(Collectors.toList());
@@ -334,7 +373,9 @@ public class Simulation implements Serializable {
                 .filter((farm) -> (farm.getStatus() == DiseaseState.VACCINATED))
                 .collect(Collectors.toSet());
     }
-
+    @JsonIgnore
+    @Setter
+    private boolean dayWithEvents;
     @JsonIgnore
     @Getter
     private final SimulationHelper helper;
@@ -364,8 +405,13 @@ public class Simulation implements Serializable {
     @Getter
     private final Map<Integer, Collection<Integer>> easeMvmtRestriction;
     private TransitionKernel kernel;
-    private boolean isthreadRunning;
+    @Getter
+    private boolean threadRunning;
     private final int rngSeed;
+    @JsonIgnore
+    @Setter
+    @Getter
+    private boolean cleanupRequired;
 
-    private static final long serialVersionUID = 32345527169572888L;
+    private static final long serialVersionUID = 32345527169572879L;
 }

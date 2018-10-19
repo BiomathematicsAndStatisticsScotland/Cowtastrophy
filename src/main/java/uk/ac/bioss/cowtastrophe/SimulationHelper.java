@@ -80,9 +80,15 @@ public class SimulationHelper implements Serializable {
 
         try (ObjectOutputStream serFile
                                 = new ObjectOutputStream(new FileOutputStream(sessionFile));
-            FileOutput jsFile = new FileOutput(jsonFile)) {
-            serFile.writeObject(this.simulation);
-            jsFile.write(this.simulation.asJson());
+             FileOutput jsFile = new FileOutput(jsonFile)) {
+            // we need to save the simulation with the cleanup flag set to true so that
+            // when we run the simulation from a session file, subsequent session files from
+            // a previous run are deleted, we do this by cloning the simulation and editing 
+            // the cloned object.
+            Simulation cloned = (Simulation) org.apache.commons.lang.SerializationUtils.clone(this.simulation);
+            cloned.setCleanupRequired(true);
+            serFile.writeObject(cloned);
+            jsFile.write(cloned.asJson());
         } catch (Exception ex) {
             log.error("Error saving session; see exception for details");
             log.error(Throwables.getStackTraceAsString(ex));
