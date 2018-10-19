@@ -121,6 +121,15 @@ public class Statistics implements Serializable {
 //        }
         measurements.cost += cost;
     }
+	
+	/** 
+	 * Get cumulative costs at end of given day.
+	 * @param day the day to get the cumulative costs up to.
+	 */
+	public final double getCost(final int day) {
+		Measurements measurements = getMeasures(day);
+		return measurements.cost;
+	}
     
     /**
      * Record a new infection.

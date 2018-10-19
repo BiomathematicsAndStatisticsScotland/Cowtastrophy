@@ -54,22 +54,38 @@ public final class ControlStrategyFactory {
                         return new NullStrategy();
                 }
 
-        }catch (IOException ex) {
+			}catch (IOException ex) {
                 // TODO: 
                 System.out.println("Exception : " + ex.getLocalizedMessage());
             }
+		}
+
+		return new NullStrategy();
+	}
+
+	/**
+	* Create the appropriate control strategy given 'culling', 'vaccinate', 'vacradius', 'move', and 'moveRad' parameters from webform
+	* @param culling integer    - the culling setting.
+	* @param vaccinate integer  - the vaccinate setting.
+	* @param vacradius double  - the vacradius setting.
+	* @param move integer       - the move setting.
+	* @param moveradius double - the moveradius setting.
+	* @return the control strategy object.
+	*/
+	public static ControlStrategy create(final int culling, final int vaccinate, final double vacradius, final int move, final double moveradius) {
+		return new CullVacMoveCombi(culling, vaccinate, vacradius, move, moveradius);
     }
 
-    return new NullStrategy();
-}
-
-/**
- * Create the appropriate control strategy given its name and a json formatted string of parameters.
- * @param strategyJson a json formatted string with the parameters for the strategy.
- * @return the control strategy object.
- */
-public static ControlStrategy create(final int culling, final int vaccinate, final double vacradius) {
-
-        return new CullVacCombi(culling, vaccinate, vacradius);
+	/**
+	* Create the appropriate control strategy given 'culling', 'vaccinate', and 'vacradius' parameters from webform
+	* @param culling integer - the culling setting.
+	* @param vaccinate integer - the vaccinate setting.
+	* @param vacradius double - the vacradius setting.
+	* @return the control strategy object.
+	*/
+	public static ControlStrategy create(final int culling, final int vaccinate, final double vacradius) {
+		return new CullVacCombi(culling, vaccinate, vacradius);
     }
+
+	
 }

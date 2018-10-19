@@ -118,6 +118,13 @@ public class Simulation implements Serializable {
         this.simulator.setTransitionKernel(kernel);
         this.simulator.run();
 
+        doDailyChecks();
+
+        statistics.setSusceptibleFarms(day, ((int)countFarms(DiseaseState.SUSCEPTIBLE)));
+        statistics.addSuspectedFarms(day, ((int)countFarms(DiseaseState.SUSPECTED)));
+        statistics.addConfirmedFarms(day, ((int)countFarms(DiseaseState.CONFIRMED)));
+        statistics.addCulledFarms(day, ((int)countFarms(DiseaseState.CULLED)));
+        statistics.addVaccinatedFarms(day, ((int)countFarms(DiseaseState.VACCINATED)));
         statistics.addCost(day, 0.0); // TODO - update this when the controls have been encoded.
 
         doDailyChecks();
@@ -334,6 +341,13 @@ public class Simulation implements Serializable {
         jsFile.append("{");
         jsFile.append("\"session_id\": \"").append(sessionId).append("\", ");
         jsFile.append("\"timeframe\": \"").append(day + 1).append("\", ");
+		jsFile.append("\"next_event\": \"").append(this.simulator.getCurrentTime()).append("\", ");
+		jsFile.append("\"susceptible\": \"").append(countFarms(DiseaseState.SUSCEPTIBLE)).append("\", ");
+		jsFile.append("\"suspected\": \"").append(countFarms(DiseaseState.SUSPECTED)).append("\", ");
+		jsFile.append("\"confirmed\": \"").append(countFarms(DiseaseState.CONFIRMED)).append("\", ");
+		jsFile.append("\"culled\": \"").append(countFarms(DiseaseState.CULLED)).append("\", ");
+		jsFile.append("\"vaccinated\": \"").append(countFarms(DiseaseState.VACCINATED)).append("\", ");
+		jsFile.append("\"cost\": \"").append(statistics.getCost(day-1)).append("\", ");
         jsFile.append("\"farms\": [");
 
         jsFile.append(farms.stream().map(Farm::asJson)
@@ -363,6 +377,16 @@ public class Simulation implements Serializable {
                 .filter((farm) -> (farm.getStatus() == DiseaseState.CONFIRMED))
                 .collect(Collectors.toSet());
     }
+	
+	/**
+     * Get a collection of farms (a java.util.Set) which are labelled as CONFIRMED or SUSPECTED.
+     * @return a a java.util.Set of CONFIRMED or SUSPECTED farms.
+     */
+    public final Set<Farm> getSuspectedOrConfirmedFarms() {
+        return farms.stream()
+                .filter((farm) -> (farm.getStatus() == DiseaseState.CONFIRMED || farm.getStatus() == DiseaseState.SUSPECTED))
+                .collect(Collectors.toSet());
+    }
 
     /**
      * Get a collection of farms (a java.util.Set) which are labelled as VACCINATED.
@@ -373,9 +397,17 @@ public class Simulation implements Serializable {
                 .filter((farm) -> (farm.getStatus() == DiseaseState.VACCINATED))
                 .collect(Collectors.toSet());
     }
-    @JsonIgnore
-    @Setter
-    private boolean dayWithEvents;
+
+    /**
+     * COUNT a collection of farms (a java.util.Set) which are labelled as stat.
+     * @return a LONG
+     */
+    public final long countFarms(DiseaseState stat) {
+        return farms.stream()
+                .filter((farm) -> (farm.getStatus() == stat))
+                .collect(Collectors.counting());
+    }
+	
     @JsonIgnore
     @Getter
     private final SimulationHelper helper;
@@ -412,6 +444,8 @@ public class Simulation implements Serializable {
     @Setter
     @Getter
     private boolean cleanupRequired;
-
+    @JsonIgnore
+    @Setter
+    private boolean dayWithEvents;
     private static final long serialVersionUID = 32345527169572879L;
 }

@@ -12,6 +12,9 @@ public abstract class ControlStrategy implements Serializable {
 	public static final int VAC_NOT = 0;
 	public static final int VAC_ON_SUS = 1;
 	public static final int VAC_ON_CON = 2;
+	public static final int MOVE_NOT = 0;
+	public static final int MOVE_ON_SUS = 1;
+	public static final int MOVE_ON_CON = 2;
 	
     /**
      * Run the control strategy at the current time.
