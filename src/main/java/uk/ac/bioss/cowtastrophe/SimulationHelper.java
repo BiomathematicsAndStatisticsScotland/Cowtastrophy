@@ -56,7 +56,7 @@ public class SimulationHelper implements Serializable {
 
     /**
      * Get a list of all farms that are within a given radius of a reference farm.
-     * @param f1       the refernece farm
+     * @param f1       the reference farm
      * @param distance the specified radius.
      * @return a list of farms within distance from f1.
      */
@@ -68,7 +68,7 @@ public class SimulationHelper implements Serializable {
 
     /**
      * Serialise the simulation to a file.
-     * @param sessionId the sessin id for this process (will be used as the filename).
+     * @param sessionId the session id for this process (will be used as the filename).
      * @param time      the simulation time of the session (will be used as the filename).
      * @return the file that the simulation was serialised to.
      */

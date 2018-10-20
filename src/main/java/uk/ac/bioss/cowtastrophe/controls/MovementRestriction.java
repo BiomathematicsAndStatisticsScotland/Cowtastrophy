@@ -1,6 +1,7 @@
 package uk.ac.bioss.cowtastrophe.controls;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Throwables;
@@ -22,14 +23,15 @@ import uk.ac.bioss.cowtastrophe.Simulation;
 @Slf4j
 public class MovementRestriction extends ControlStrategy implements Serializable {
 
-    static class Params {
+    static class Params implements Serializable {
 
         public Params() {
         }
 
         public int farmId;
         public double radius;
-        public int days;
+        public int days = 1000;
+        private static final long serialVersionUID = 10924432869572879L;
     }
 
     /**
@@ -41,6 +43,7 @@ public class MovementRestriction extends ControlStrategy implements Serializable
         restrictions = new HashMap<>();
         try {
             ObjectMapper mapper = new ObjectMapper();
+            mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
             MovementRestriction.Params[] params = mapper.treeToValue(jsonNode.get("parameters"),
                                                                      MovementRestriction.Params[].class);
             for (MovementRestriction.Params param : params) {
@@ -52,7 +55,7 @@ public class MovementRestriction extends ControlStrategy implements Serializable
                       Throwables.getStackTraceAsString(ex));
         }
     }
-
+// TODO: the number of days should be VERY long be default - the idea is that there is no lifting of restriction.
     @Override
     public void run(Simulation simulation) {
         for (Map.Entry<Integer, MovementRestriction.Params> entry : restrictions.entrySet()) {

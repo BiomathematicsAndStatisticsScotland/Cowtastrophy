@@ -126,6 +126,7 @@ public class Simulation implements Serializable {
         statistics.addConfirmedFarms(day, ((int)countFarms(DiseaseState.CONFIRMED)));
         statistics.addCulledFarms(day, ((int)countFarms(DiseaseState.CULLED)));
         statistics.addVaccinatedFarms(day, ((int)countFarms(DiseaseState.VACCINATED)));
+        statistics.addRestrictedFarms(day, this.restrictedFarms.size());
         statistics.addCost(day, 0.0); // TODO - update this when the controls have been encoded.
 
         doDailyChecks();

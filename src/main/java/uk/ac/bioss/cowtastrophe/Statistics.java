@@ -23,9 +23,9 @@ public class Statistics implements Serializable {
          */
         @Override
         public String toString() {
-            return String.format("%d, %d, %d, %d, %d, %f", numSusceptibleFarms, numSuspectedFarms,
+            return String.format("%d, %d, %d, %d, %d, %d, %.2f", numSusceptibleFarms, numSuspectedFarms,
                                  numConfirmedFarms, numCulledFarms,
-                                 numVaccinatedFarms, cost);
+                                 numVaccinatedFarms, numRestrictedFarms, cost);
         }
 
         private int numSusceptibleFarms = 0;
@@ -33,6 +33,7 @@ public class Statistics implements Serializable {
         private int numConfirmedFarms = 0;
         private int numCulledFarms = 0;
         private int numVaccinatedFarms = 0;
+        private int numRestrictedFarms = 0;
         private double cost = 0.0;
         private static final long serialVersionUID = 745539930019474501L;
     }
@@ -81,6 +82,17 @@ public class Statistics implements Serializable {
         Measurements measurements = getMeasures(day);
 
         measurements.numVaccinatedFarms += num;
+    }
+
+    /**
+     * Add a number of farms under movement restrictions for a given day.
+     * @param day the day to make the recording.
+     * @param num the number of vaccinated farms on that day.
+     */
+    public final void addRestrictedFarms(final int day, final int num) {
+        Measurements measurements = getMeasures(day);
+
+        measurements.numRestrictedFarms += num;
     }
 
     /**
@@ -157,7 +169,8 @@ public class Statistics implements Serializable {
 
         StringBuilder sb = new StringBuilder();
         sb.append("#Time, Susceptible Farms, Farms Suspected, ");
-        sb.append("Farms Confirmed, Farms Culled, Farms Vaccinated, Cost on day, Total Cost\n");
+        sb.append("Farms Confirmed, Farms Culled, Farms Vaccinated, ");
+        sb.append("Restricted Farms, Cost on day, Total Cost\n");
         stats.entrySet().forEach((entry) -> {
            
             double totalCost = 0.0;
@@ -168,7 +181,7 @@ public class Statistics implements Serializable {
                     .reduce(totalCost, (accumulator, _item) -> accumulator + _item);
 
             sb.append(entry.getKey()).append(", ").append(entry.getValue().toString())
-                    .append(", ").append(totalCost)
+                    .append(", ").append(String.format("%.2f",totalCost))
                     .append("\n");
         });
         return sb.toString();
