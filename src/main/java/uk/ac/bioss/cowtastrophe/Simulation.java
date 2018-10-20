@@ -12,6 +12,7 @@ import java.io.Serializable;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -258,6 +259,17 @@ public class Simulation implements Serializable {
                 restrictedFarms.remove(farmId);
             }
         }
+        
+        // Finally: Each infected farm carries a cost as does being under movement restriction
+        // update the statistics.
+        Collection<DiseaseState> infectedStates = Arrays.asList(DiseaseState.CONFIRMED,
+                                                                DiseaseState.INFECTIOUS);
+        Long numInfectedFarms = farms.stream()
+                .filter((farm) -> (infectedStates.contains(farm.getStatus())))
+                .collect(Collectors.counting());
+        this.statistics.addCost(day, numInfectedFarms*parameters.getCostOfInfectedFarmPerDay());
+        
+        this.statistics.addCost(day, restrictedFarms.size()*parameters.getCostOfMvmtBanPerDay());
     }
 
     /**

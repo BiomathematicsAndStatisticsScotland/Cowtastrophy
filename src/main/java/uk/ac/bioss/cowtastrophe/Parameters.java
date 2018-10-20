@@ -57,6 +57,7 @@ public class Parameters implements Serializable {
             this.kernelPower = params.getKernelPower();
             this.restrictedKernelPower = params.getRestrictedKernelPower();
             this.costOfMvmtBanPerDay = params.getCostOfMvmtBanPerDay();
+            this.costOfInfectedFarmPerDay = params.getCostOfInfectedFarmPerDay();
 
             farms.clear();
             farms.addAll(Arrays.asList(mapper.treeToValue(json.get("farms"), Farm[].class)));
@@ -144,10 +145,14 @@ public class Parameters implements Serializable {
     @Getter
     @Setter
     private double costOfMvmtBanPerDay;
+    /** The cost (per day) of being infected. */
+    @Getter
+    @Setter
+    private double costOfInfectedFarmPerDay;
     @Getter
     private final List<Farm> farms = new ArrayList<>();
         @Getter
     private final List<Farm> seedFarms = new ArrayList<>();
     /** The serialVersionUID. */
-    private static final long serialVersionUID = 1859289310330274520L;
+    private static final long serialVersionUID = 4559289005285274521L;
 }
