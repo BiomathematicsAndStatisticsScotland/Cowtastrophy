@@ -189,7 +189,8 @@ public class Simulation implements Serializable {
         ExecutorService executorService = Executors.newSingleThreadExecutor();
         Future<?> result = executorService.submit(() -> {
             threadRunning = true;
-            while (this.simulator.getTransitionKernel().getTransitionEvents().size() > 0) {
+            while (this.simulator.getTransitionKernel().getTransitionEvents().size() > 0
+                    && day < MAX_ENDDATE) {
                 // i.e. there are more events
                 run24Hours();
             }
@@ -460,5 +461,7 @@ public class Simulation implements Serializable {
     @JsonIgnore
     @Setter
     private boolean dayWithEvents;
+    @JsonIgnore
+    private final int MAX_ENDDATE = 1000;
     private static final long serialVersionUID = 32345527169572879L;
 }
