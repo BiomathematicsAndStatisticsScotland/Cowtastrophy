@@ -57,6 +57,8 @@ public class PopulationManager implements AmountManager, Serializable {
             infectedFarm.setInfectionSource(((Farm) event.getInitialState()).getId());
         }
         
+        this.simulation.updateKernel();
+        
         // We have processed some events for this day so mark the simulation.
         this.simulation.setDayWithEvents(true);
 
