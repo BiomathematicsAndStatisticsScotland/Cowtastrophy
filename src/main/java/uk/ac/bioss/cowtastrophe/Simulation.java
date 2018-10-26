@@ -24,6 +24,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
@@ -52,7 +53,8 @@ public class Simulation implements Serializable {
         this.day = 0;
         this.statistics = new Statistics();
         this.controlStrategy = new NullStrategy();
-        this.rngSeed = new RNG(RNG.Generator.Well19937c).getInteger(0, Integer.MAX_VALUE - 1);
+        this.rng = new RNG(RNG.Generator.Well19937c);
+        this.rngSeed = rng.getInteger(0, Integer.MAX_VALUE - 1);
         this.cleanupRequired = true;
 
         // Find all the farms whose id is in the list of seedIds and set them to be INFECTIOUS.
@@ -121,11 +123,12 @@ public class Simulation implements Serializable {
 
         doDailyChecks();
 
-        statistics.setSusceptibleFarms(day, ((int)countFarms(DiseaseState.SUSCEPTIBLE)));
-        statistics.addSuspectedFarms(day, ((int)countFarms(DiseaseState.SUSPECTED)));
-        statistics.addConfirmedFarms(day, ((int)countFarms(DiseaseState.CONFIRMED)));
-        statistics.addCulledFarms(day, ((int)countFarms(DiseaseState.CULLED)));
-        statistics.addVaccinatedFarms(day, ((int)countFarms(DiseaseState.VACCINATED)));
+        statistics.setSusceptibleFarms(day, ((int) countFarms(DiseaseState.SUSCEPTIBLE)));
+        statistics.addSuspectedFarms(day, ((int) countFarms(DiseaseState.SUSPECTED)));
+        statistics.addConfirmedFarms(day, ((int) countFarms(DiseaseState.CONFIRMED)));
+        statistics.addCulledFarms(day, ((int) countFarms(DiseaseState.CULLED)));
+        statistics.addVaccinatedFarms(day, ((int) countFarms(DiseaseState.VACCINATED)));
+        statistics.addInfectedButNotSuspectedFarms(day, ((int) countFarms(DiseaseState.INFECTIOUS_NOT_SUSPECTED)));
         statistics.addRestrictedFarms(day, this.restrictedFarms.size());
         statistics.addCost(day, 0.0); // TODO - update this when the controls have been encoded.
 
@@ -190,7 +193,7 @@ public class Simulation implements Serializable {
         Future<?> result = executorService.submit(() -> {
             threadRunning = true;
             while (this.simulator.getTransitionKernel().getTransitionEvents().size() > 0
-                    && day < MAX_ENDDATE) {
+                   && day < MAX_ENDDATE) {
                 // i.e. there are more events
                 run24Hours();
             }
@@ -232,21 +235,31 @@ public class Simulation implements Serializable {
 
         //First: check all suspected farms and mark them as confirmed.
         if (SuspisciousFarmTests.get(this.getDay()) != null) {
-            Collection<Event> todaysTests = new HashSet(SuspisciousFarmTests.get(this.getDay()));
-            if (todaysTests != null) {
-                log.info("Testing {} suspected farms on day {} (next infection event at = {})",
-                         todaysTests.size(), day, simulator.getCurrentTime());
-                for (final Object eventObj : todaysTests) {
-                    Event event = (Event) eventObj;
 
-                    Farm suspectedFarm = (Farm) event.getInitialState();
+            List<Farm> suspectedFarms = SuspisciousFarmTests.get(this.getDay()).stream()
+                    .map(event -> (Farm) event.getInitialState())
+                    .filter(farm -> (DiseaseState.SUSPECTED == farm.getStatus()))
+                    .collect(Collectors.toList());
+
+            if (suspectedFarms.size() > 0) {
+
+                log.info("Testing {} suspected farms on day {} (next infection event at = {})",
+                         suspectedFarms.size(), day, simulator.getCurrentTime());
+
+                int numFailedTests = ((int) Math.round(suspectedFarms.size() * (1 - parameters.getTestSensitivity())));
+                // these farms are suspected but are not confirmed - these will be infectious but not suspected.
+                List<Farm> failedFarmTests = rng.selectManyOf(suspectedFarms, numFailedTests);
+
+                for (final Farm farm : suspectedFarms) {
                     final double cost = parameters.getCostOfFarmVisit()
-                                        + parameters.getCostOfTestPerAnimal() * suspectedFarm.getHerdSize();
+                                        + parameters.getCostOfTestPerAnimal() * farm.getHerdSize();
                     statistics.addCost(day, cost);
-                    log.trace("Testing farm {} at time {} [cost = {}]", suspectedFarm, day, cost);
-                    if (DiseaseState.SUSPECTED == suspectedFarm.getStatus()) {
-                        suspectedFarm.setStatus(DiseaseState.CONFIRMED);
-                        log.info("Farm {} confirmed.", suspectedFarm.getId());
+                    if (failedFarmTests.contains(farm)) {
+                        farm.setStatus(DiseaseState.CONFIRMED);
+                        log.info("Farm {} confirmed on day [cost = {}].", farm.getId(), day, cost);
+                    } else {
+                        farm.setStatus(DiseaseState.INFECTIOUS_NOT_SUSPECTED);
+                        log.info("Farm {} failed test (infectious but not confirmed) on day [cost = {}].", farm.getId(), day, cost);
                     }
                 }
                 // cleaning up - removing these tests from the map!
@@ -261,17 +274,17 @@ public class Simulation implements Serializable {
                 restrictedFarms.remove(farmId);
             }
         }
-        
+
         // Finally: Each infected farm carries a cost as does being under movement restriction
         // update the statistics.
         Collection<DiseaseState> infectedStates = Arrays.asList(DiseaseState.CONFIRMED,
-                                                                DiseaseState.INFECTIOUS);
+                                                                DiseaseState.INFECTIOUS_NOT_SUSPECTED);
         Long numInfectedFarms = farms.stream()
                 .filter((farm) -> (infectedStates.contains(farm.getStatus())))
                 .collect(Collectors.counting());
-        this.statistics.addCost(day, numInfectedFarms*parameters.getCostOfInfectedFarmPerDay());
-        
-        this.statistics.addCost(day, restrictedFarms.size()*parameters.getCostOfMvmtBanPerDay());
+        this.statistics.addCost(day, numInfectedFarms * parameters.getCostOfInfectedFarmPerDay());
+
+        this.statistics.addCost(day, restrictedFarms.size() * parameters.getCostOfMvmtBanPerDay());
     }
 
     /**
@@ -284,7 +297,7 @@ public class Simulation implements Serializable {
                                                                 && name.endsWith(".ser"));
 
             for (File file : files) {
-                String dataDay = file.getName().replace(sessionId+"_", "").replace(".0.ser", "");
+                String dataDay = file.getName().replace(sessionId + "_", "").replace(".0.ser", "");
                 int fileDay = Integer.parseInt(dataDay);
                 if (fileDay > day) {
                     log.info("Deleting previous file {} and associated json file", file);
@@ -317,7 +330,8 @@ public class Simulation implements Serializable {
 
         List<Farm> infectedFarms = farms.stream()
                 .filter((farm) -> (farm.getStatus() == DiseaseState.SUSPECTED)
-                                  || (farm.getStatus() == DiseaseState.CONFIRMED))
+                                  || (farm.getStatus() == DiseaseState.CONFIRMED)
+                                  || (farm.getStatus() == DiseaseState.INFECTIOUS_NOT_SUSPECTED))
                 .collect(Collectors.toList());
 
         List<Farm> susceptibleFarms = farms.stream()
@@ -355,13 +369,13 @@ public class Simulation implements Serializable {
         jsFile.append("{");
         jsFile.append("\"session_id\": \"").append(sessionId).append("\", ");
         jsFile.append("\"timeframe\": \"").append(day + 1).append("\", ");
-		jsFile.append("\"next_event\": \"").append(this.simulator.getCurrentTime()).append("\", ");
-		jsFile.append("\"susceptible\": \"").append(countFarms(DiseaseState.SUSCEPTIBLE)).append("\", ");
-		jsFile.append("\"suspected\": \"").append(countFarms(DiseaseState.SUSPECTED)).append("\", ");
-		jsFile.append("\"confirmed\": \"").append(countFarms(DiseaseState.CONFIRMED)).append("\", ");
-		jsFile.append("\"culled\": \"").append(countFarms(DiseaseState.CULLED)).append("\", ");
-		jsFile.append("\"vaccinated\": \"").append(countFarms(DiseaseState.VACCINATED)).append("\", ");
-		jsFile.append("\"cost\": \"").append(statistics.getCost(day-1)).append("\", ");
+        jsFile.append("\"next_event\": \"").append(this.simulator.getCurrentTime()).append("\", ");
+        jsFile.append("\"susceptible\": \"").append(countFarms(DiseaseState.SUSCEPTIBLE)).append("\", ");
+        jsFile.append("\"suspected\": \"").append(countFarms(DiseaseState.SUSPECTED)).append("\", ");
+        jsFile.append("\"confirmed\": \"").append(countFarms(DiseaseState.CONFIRMED)).append("\", ");
+        jsFile.append("\"culled\": \"").append(countFarms(DiseaseState.CULLED)).append("\", ");
+        jsFile.append("\"vaccinated\": \"").append(countFarms(DiseaseState.VACCINATED)).append("\", ");
+        jsFile.append("\"cost\": \"").append(statistics.getCost(day - 1)).append("\", ");
         jsFile.append("\"farms\": [");
 
         jsFile.append(farms.stream().map(Farm::asJson)
@@ -391,8 +405,8 @@ public class Simulation implements Serializable {
                 .filter((farm) -> (farm.getStatus() == DiseaseState.CONFIRMED))
                 .collect(Collectors.toSet());
     }
-	
-	/**
+
+    /**
      * Get a collection of farms (a java.util.Set) which are labelled as CONFIRMED or SUSPECTED.
      * @return a a java.util.Set of CONFIRMED or SUSPECTED farms.
      */
@@ -421,7 +435,7 @@ public class Simulation implements Serializable {
                 .filter((farm) -> (farm.getStatus() == stat))
                 .collect(Collectors.counting());
     }
-	
+
     @JsonIgnore
     @Getter
     private final SimulationHelper helper;
@@ -453,6 +467,8 @@ public class Simulation implements Serializable {
     private TransitionKernel kernel;
     @Getter
     private boolean threadRunning;
+    @JsonIgnore
+    private final RNG rng;
     private final int rngSeed;
     @JsonIgnore
     @Setter
@@ -463,5 +479,5 @@ public class Simulation implements Serializable {
     private boolean dayWithEvents;
     @JsonIgnore
     private final int MAX_ENDDATE = 1000;
-    private static final long serialVersionUID = 32345527169572879L;
+    private static final long serialVersionUID = 84345527169572871L;
 }

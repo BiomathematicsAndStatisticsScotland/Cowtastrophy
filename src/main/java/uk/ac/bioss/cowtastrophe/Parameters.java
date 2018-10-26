@@ -25,11 +25,9 @@ import lombok.ToString;
 public class Parameters implements Serializable {
 
     /**
-     * No args constructor. Do not use, it is added so that parameters can be constructed
-     * from a JSON object.
+     * No args constructor. Do not use, it is added so that parameters can be constructed from a JSON object.
      */
     public Parameters() {
-
     }
 
     /**
@@ -37,25 +35,27 @@ public class Parameters implements Serializable {
      * @param jsonFile the name (including path) of the JSON file.
      */
     public Parameters(final String jsonFile) {
-        
+
         log.info("Loading simulation data from {}", jsonFile);
 
         ObjectMapper mapper = new ObjectMapper();
         try (InputStream input = new FileInputStream(jsonFile)) {
             JsonNode json = mapper.readTree(input);
             Parameters params = mapper.treeToValue(json.get("parameters"), Parameters.class);
-            
+
             this.directory = ""; // this will be set by the Simulation.
             this.beta = params.getBeta();
             this.endTime = params.getEndTime();
-            this.costOfFarmVisit = params.getCostOfFarmVisit();
-            this.costOfTestPerAnimal = params.getCostOfTestPerAnimal();
-            this.costOfCullingAnimal = params.getCostOfCullingAnimal();
-            this.costOfVaccinatingAnimal = params.getCostOfVaccinatingAnimal();
             this.suspectedTestDelay = params.getSuspectedTestDelay();
             this.kernelOffset = params.getKernelOffset();
             this.kernelPower = params.getKernelPower();
             this.restrictedKernelPower = params.getRestrictedKernelPower();
+            this.testSensitivity = params.testSensitivity;
+            this.testSpecificity = params.testSpecificity;
+            this.costOfFarmVisit = params.getCostOfFarmVisit();
+            this.costOfTestPerAnimal = params.getCostOfTestPerAnimal();
+            this.costOfCullingAnimal = params.getCostOfCullingAnimal();
+            this.costOfVaccinatingAnimal = params.getCostOfVaccinatingAnimal();
             this.costOfMvmtBanPerDay = params.getCostOfMvmtBanPerDay();
             this.costOfInfectedFarmPerDay = params.getCostOfInfectedFarmPerDay();
 
@@ -70,7 +70,7 @@ public class Parameters implements Serializable {
         } catch (IOException ex) {
             throw new BroadwickException("Error loading simulation info; "
                                          + Throwables.getStackTraceAsString(ex));
-        }            
+        }
     }
 
     /**
@@ -78,53 +78,76 @@ public class Parameters implements Serializable {
      * @param prop the properties to check.
      */
     private void validateProperties(final Properties prop) {
-        // The properties file must have either
-        // 1. a "presets" line giving the name of a json file containing the
-        //    configured parameters.
-        // or
-        // 2. all the parameters (map, numFarms, numSeeds, transmissionTerm).
 
-        boolean containsPresetsKey = prop.containsKey("presets")
-                                     && prop.containsKey("directory");
         boolean containsParamKeys = prop.containsKey("map")
                                     && prop.containsKey("numFarms")
                                     && prop.containsKey("numSeeds")
-                                    && prop.containsKey("transmissionParameter")
-                                    && prop.containsKey("endTime")
-                                    && prop.containsKey("costOfTest")
-                                    && prop.containsKey("costOfCullingAnimal")
-                                    && prop.containsKey("directory");
+                                    && prop.containsKey("beta")
+                                    && prop.containsKey("suspectedTestDelay")
+                                    && prop.containsKey("kernelOffset")
+                                    && prop.containsKey("kernelPower")
+                                    && prop.containsKey("kernelPower")
+                                    && prop.containsKey("restrictedKernelPower")
+                                    && prop.containsKey("costOfFarmVisit")
+                                    && prop.containsKey("costOfTestPerAnimal")
+                                    && prop.containsKey("costOfVaccinatingAnimal")
+                                    && prop.containsKey("costOfMvmtBanPerDay")
+                                    && prop.containsKey("costOfInfectedFarmPerDay")
+                                    && prop.containsKey("testSpecificity")
+                                    && prop.containsKey("testSensitivity");
+        if (!(containsParamKeys)) {
+            throw new BroadwickException("Invalid properties file - missing properties");
+        }
+        double sens = Double.valueOf(prop.getProperty("testSensitivity"));
+        if (sens < 0 || sens >1.0) {
+            throw new BroadwickException("Invalid  test sensitivity - must be in range 1,0");
+        }
 
-        if (!(containsPresetsKey || containsParamKeys)) {
-            throw new BroadwickException("Could not find required properties.");
+        double spec = Double.valueOf(prop.getProperty("testSpecificity"));
+        if (spec < 0 || spec >1.0) {
+            throw new BroadwickException("Invalid  test specificity - must be in range 1,0");
         }
     }
 
-    /** The base directory for all the configs/data files. */
+    /**
+     * The base directory for all the configs/data files.
+     */
     @Getter
     @Setter
     private String directory;
-    /** The disease transmission parameter. */
+    /**
+     * The disease transmission parameter.
+     */
     @Getter
     @Setter
     private double beta;
-    /** The final time of the simulation. */
+    /**
+     * The final time of the simulation.
+     */
     @Getter
     @Setter
     private int endTime;
-    /** The time delay (in days) between a farm being suspected to being confirmed. */
+    /**
+     * The time delay (in days) between a farm being suspected to being confirmed.
+     */
     @Getter
     @Setter
     private int suspectedTestDelay;
-    /** The cost of visiting a farm. */
+    /**
+     * The cost of visiting a farm.
+     */
     @Getter
     @Setter
     private double costOfFarmVisit;
-    /** The cost (per animal) of performing a test. */
+    /**
+     * The cost (per animal) of performing a test.
+     */
     @Getter
     @Setter
     private double costOfTestPerAnimal;
-    /** The cost (per animal) of culling an animal. */
+    /**
+     * The cost (per animal) of culling an animal.
+     */
     @Getter
     @Setter
     private double costOfCullingAnimal;
@@ -137,22 +160,36 @@ public class Parameters implements Serializable {
     @Getter
     @Setter
     private double kernelOffset;
-    /** The cost (per animal) of vaccinating an animal. */
+    /**
+     * The cost (per animal) of vaccinating an animal.
+     */
     @Getter
     @Setter
     private double costOfVaccinatingAnimal;
-    /** The cost (per day) of being under movement restriction. */
+    /**
+     * The cost (per day) of being under movement restriction.
+     */
     @Getter
     @Setter
     private double costOfMvmtBanPerDay;
-    /** The cost (per day) of being infected. */
+    @Getter
+    @Setter
+    private double testSensitivity;
+    @Getter
+    @Setter
+    private double testSpecificity;
+    /**
+     * The cost (per day) of being infected.
+     */
     @Getter
     @Setter
     private double costOfInfectedFarmPerDay;
     @Getter
     private final List<Farm> farms = new ArrayList<>();
-        @Getter
+    @Getter
     private final List<Farm> seedFarms = new ArrayList<>();
-    /** The serialVersionUID. */
-    private static final long serialVersionUID = 4559289005285274521L;
+    /**
+     * The serialVersionUID.
+     */
+    private static final long serialVersionUID = 315294900520037451L;
 }

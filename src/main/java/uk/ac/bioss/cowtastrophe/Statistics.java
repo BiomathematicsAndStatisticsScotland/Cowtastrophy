@@ -23,7 +23,8 @@ public class Statistics implements Serializable {
          */
         @Override
         public String toString() {
-            return String.format("%d, %d, %d, %d, %d, %d, %.2f", numSusceptibleFarms, numSuspectedFarms,
+            return String.format("%d, %d, %d, %d, %d, %d, %d, %.2f", numSusceptibleFarms, numSuspectedFarms,
+                                 numInfectedButUnsuspectedFarms,
                                  numConfirmedFarms, numCulledFarms,
                                  numVaccinatedFarms, numRestrictedFarms, cost);
         }
@@ -34,6 +35,7 @@ public class Statistics implements Serializable {
         private int numCulledFarms = 0;
         private int numVaccinatedFarms = 0;
         private int numRestrictedFarms = 0;
+        private int numInfectedButUnsuspectedFarms = 0;
         private double cost = 0.0;
         private static final long serialVersionUID = 745539930019474501L;
     }
@@ -118,6 +120,17 @@ public class Statistics implements Serializable {
     }
 
     /**
+     * Add a number of farms that failed the test for suspected cases for a given day.
+     * @param day the day to make the recording.
+     * @param num the number of culled farms on that day.
+     */
+    public final void addInfectedButNotSuspectedFarms(final int day, final int num) {
+        Measurements measurements = getMeasures(day);
+
+        measurements.numInfectedButUnsuspectedFarms += num;
+    }
+
+    /**
      * Add a cost for culling farms for a given day.
      * @param day  the day to make the recording.
      * @param cost the cost of culling farms farms on that day.
@@ -168,11 +181,18 @@ public class Statistics implements Serializable {
     public final String toString() {
 
         StringBuilder sb = new StringBuilder();
-        sb.append("#Time, Susceptible Farms, Farms Suspected, ");
-        sb.append("Farms Confirmed, Farms Culled, Farms Vaccinated, ");
-        sb.append("Restricted Farms, Cost on day, Total Cost\n");
+        sb.append("#Column 1 : Time\n");
+        sb.append("#Column 2 : Susceptible Farms\n");
+        sb.append("#Column 3 : Farms Suspected\n");
+        sb.append("#Column 4 : Infectious but not suspected\n");
+        sb.append("#Column 5 : Farms Confirmed\n");
+        sb.append("#Column 6 : Farms Culled\n");
+        sb.append("#Column 7 : Farms Vaccinated\n");
+        sb.append("#Column 8 : Restricted Farms\n");
+        sb.append("#Column 9 : Cost on day\n");
+        sb.append("#Column 10 : Total Cost\n");
         stats.entrySet().forEach((entry) -> {
-           
+
             double totalCost = 0.0;
             final int day = entry.getKey();
             // cumulative cost thus far.
@@ -181,7 +201,7 @@ public class Statistics implements Serializable {
                     .reduce(totalCost, (accumulator, _item) -> accumulator + _item);
 
             sb.append(entry.getKey()).append(", ").append(entry.getValue().toString())
-                    .append(", ").append(String.format("%.2f",totalCost))
+                    .append(", ").append(String.format("%.2f", totalCost))
                     .append("\n");
         });
         return sb.toString();
@@ -193,5 +213,5 @@ public class Statistics implements Serializable {
     /**
      * The serialVersionUID.
      */
-    private static final long serialVersionUID = 131879930019376509L;
+    private static final long serialVersionUID = 721879930018356598L;
 }
