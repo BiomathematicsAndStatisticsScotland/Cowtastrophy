@@ -24,7 +24,6 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
@@ -69,9 +68,9 @@ public class Simulation implements Serializable {
         // Create the sessionId for the session and create the directory to hold it.
         sessionId = helper.generateSessionId();
         log.info("Generated session id " + sessionId);
-        File settingsDir = new File(directory + sessionId);
+        File settingsDir = new File(directory, sessionId);
         if (!settingsDir.exists()) {
-            log.info("Creating directory " + directory);
+            log.info("Creating directory " + settingsDir);
             settingsDir.mkdir();
             // If you require it to make the entire directory path including parents,
             // use directory.mkdirs(); here instead.

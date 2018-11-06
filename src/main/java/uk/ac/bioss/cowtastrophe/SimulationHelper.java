@@ -73,10 +73,9 @@ public class SimulationHelper implements Serializable {
      * @return the file that the simulation was serialised to.
      */
     public final String saveSession(final String sessionId, final double time) {
-        String sessionFile = parameters.getDirectory() + sessionId + File.separator
-                             + sessionId + "_" + time + ".ser";
-        String jsonFile = parameters.getDirectory() + sessionId + File.separator
-                          + sessionId + "_" + time + ".json";
+        String sessionDir = new File(parameters.getDirectory(), sessionId).getAbsolutePath();
+        String sessionFile = new File(sessionDir, sessionId + "_" + time + ".ser").getAbsolutePath();
+        String jsonFile = new File(sessionDir, sessionId + "_" + time + ".json").getAbsolutePath();
 
         try (ObjectOutputStream serFile
                                 = new ObjectOutputStream(new FileOutputStream(sessionFile));
@@ -121,8 +120,8 @@ public class SimulationHelper implements Serializable {
      */
     public final void savePid(final String sessionId, final String pid) {
         // save it to a file called [sessionId].pid
-        String sessionFile = parameters.getDirectory() + sessionId + File.separator
-                             + sessionId + ".pid";
+        String sessionDir = new File(parameters.getDirectory(), sessionId).getAbsolutePath();
+        String sessionFile = new File(sessionDir, sessionId + ".pid").getAbsolutePath();
 
         try (Writer wr = new FileWriter(sessionFile)) {
             wr.write(pid);
