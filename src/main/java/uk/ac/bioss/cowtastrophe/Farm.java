@@ -9,14 +9,14 @@ import java.io.Serializable;
 import java.util.concurrent.ThreadLocalRandom;
 import lombok.Getter;
 import lombok.Setter;
-import lombok.EqualsAndHashCode;
 
 /**
  * A Farm in the simulation contains animals that can move and transmit disease. Since they contain a [disease] state
  * they implement a SimulationState.
  */
-@EqualsAndHashCode
 public class Farm implements SimulationState, Serializable {
+    
+    // TODO: add member daysSinceLastSuspectedCase;
 
     /**
      * Create a default farm object without setting any internal attributes.
