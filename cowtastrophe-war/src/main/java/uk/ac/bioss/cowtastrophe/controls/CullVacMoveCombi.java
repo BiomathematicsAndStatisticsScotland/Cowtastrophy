@@ -118,7 +118,7 @@ public class CullVacMoveCombi extends ControlStrategy implements Serializable {
                   .collect(Collectors.toList()));
 
         for (Farm farm : toBeVaccinated) {
-			if(farm.getStatus() == DiseaseState.SUSCEPTIBLE) {
+			if(farm.getStatus() == DiseaseState.SUSCEPTIBLE || farm.getStatus() == DiseaseState.INFECTIOUS_NOT_SUSPECTED) {
 				farm.setDayVaccinated(simulation.getDay());
 				farm.setStatus(DiseaseState.VACCINATED);
 				simulation.getStatistics().addCost(simulation.getDay(),
@@ -131,7 +131,7 @@ public class CullVacMoveCombi extends ControlStrategy implements Serializable {
     /**
      * A public identifier (name) of the strategy.
      */
-    public static final String name = "Cull and Vaccinate and Movement restrict";
+    public static final String name = "Cull_and_vaccinate_and_movement_restrict";
 
     private final double vacradius;
     private final int culling;

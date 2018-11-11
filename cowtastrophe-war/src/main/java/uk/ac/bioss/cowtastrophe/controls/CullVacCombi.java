@@ -2,6 +2,8 @@ package uk.ac.bioss.cowtastrophe.controls;
 
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 import uk.ac.bioss.cowtastrophe.ControlStrategy;
@@ -39,13 +41,13 @@ public class CullVacCombi extends ControlStrategy implements Serializable {
             return;
         }
         
-        ArrayList<Farm> toBeCulled;
+        Set<Farm> toBeCulled;
         if (culling == ControlStrategy.CULL_ON_CON) {
-            toBeCulled = new ArrayList<>(simulation.getConfirmedFarms());
+            toBeCulled = simulation.getConfirmedFarms();
         } else {
-            toBeCulled = new ArrayList<>(simulation.getSuspectedFarms());
+            toBeCulled = simulation.getSuspectedOrConfirmedFarms();
         }
-
+        
         log.trace("Farms to be culled {}", toBeCulled.stream()
                   .map(Farm::getId)
                   .sorted()
@@ -64,14 +66,15 @@ public class CullVacCombi extends ControlStrategy implements Serializable {
         if (vaccinate == ControlStrategy.VAC_NOT) {
             return;
         }
-        
-        ArrayList<Farm> toBeVaccinated = new ArrayList<>();
+
+        Set<Farm> toBeVaccinated = new HashSet<>();
+		
         if (vaccinate == ControlStrategy.VAC_ON_CON) {
             for (Farm farm : simulation.getConfirmedFarms()) {
                 toBeVaccinated.addAll(simulation.getHelper().getAllFarmsWithindistance(farm, vacradius));
             }
         } else {
-            for (Farm farm : simulation.getSuspectedFarms()) {
+            for (Farm farm : simulation.getSuspectedOrConfirmedFarms()) {
                 toBeVaccinated.addAll(simulation.getHelper().getAllFarmsWithindistance(farm, vacradius));
             }
         }
@@ -93,7 +96,7 @@ public class CullVacCombi extends ControlStrategy implements Serializable {
     /**
      * A public identifier (name) of the strategy.
      */
-    public static final String name = "Ring_vaccination";
+    public static final String name = "Cull_and_vaccinate_combi";
 
     private final double vacradius;
     private final int culling;

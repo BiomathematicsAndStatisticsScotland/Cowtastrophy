@@ -138,6 +138,11 @@ public class Simulation implements Serializable {
                  .map(Farm::getId)
                  .sorted()
                  .collect(Collectors.toList()));
+        log.info("Infectious not suspected Farms = {} ", farms.stream()
+                 .filter((farm) -> (farm.getStatus() == DiseaseState.INFECTIOUS_NOT_SUSPECTED))
+                 .map(Farm::getId)
+                 .sorted()
+                 .collect(Collectors.toList()));
         log.info("Suspected Farms = {} ", farms.stream()
                  .filter((farm) -> (farm.getStatus() == DiseaseState.SUSPECTED))
                  .map(Farm::getId)
@@ -296,12 +301,12 @@ public class Simulation implements Serializable {
                                                                 && name.endsWith(".ser"));
 
             for (File file : files) {
-                String dataDay = file.getName().replace(sessionId + "_", "").replace(".0.ser", "");
+                String dataDay = file.getName().replace(sessionId + "_", "").replace(".ser", "");
                 int fileDay = Integer.parseInt(dataDay);
                 if (fileDay > day) {
                     log.info("Deleting previous file {} and associated json file", file);
                     file.delete();
-                    (new File(file.toString().replace(".0.ser", ".0.json"))).delete();
+                    (new File(file.toString().replace(".ser", ".json"))).delete();
                 }
             }
 
