@@ -60,47 +60,10 @@ public class AppServlet extends HttpServlet {
     @Override
     protected final void doGet(final HttpServletRequest request, final HttpServletResponse response)
             throws ServletException, IOException {
-
-        // This is an example of what must be done to set the simulation code up
-        if (simulation == null) {
-            init();
-            for (Map.Entry<String, String[]> entry : request.getParameterMap().entrySet()) {
-                String[] get = entry.getValue();
-                for (String str : get) {
-                    log.info("{} = {} ", entry.getKey(), str);
-                }
-            }
-            simulation = new Simulation(this.getServletConfig().getInitParameter("BaseDirectory"),
+        init();
+        simulation = new Simulation(this.getServletConfig().getInitParameter("BaseDirectory"),
                                         this.getServletConfig().getInitParameter("SettingsFile"));
-        }
-
-        if (!request.getParameter("session").isEmpty()) {
-            try (ObjectInputStream ois
-                  = new ObjectInputStream(new FileInputStream(request.getParameter("session")))) {
-                simulation = (Simulation) ois.readObject();
-                log.trace("Running with settings {}", simulation.getParameters().toString());
-            } catch (Exception ex) {
-                log.error("Error loading session; see exception for details");
-                log.error(Throwables.getStackTraceAsString(ex));
-            }
-        }
-
-        if (request.getParameter("controlStrategy") != null) {
-            ControlStrategy strategy =
-                    ControlStrategyFactory.create(request.getParameter("controlStrategy"));
-            simulation.setControlStrategy(strategy);
-        }
-
-        log.info("Running");
-        if ("runToNextEvent".equals(request.getParameter("mode"))) {
-            log.info("Running Simulation to Next Event");
-            simulation.run24Hours();
-        } else if ("run".equals(request.getParameter("mode"))) {
-            simulation.run();
-        //} else if ("true".equals(request.getParameter("getStatistics"))) {
-            //simulation.getStatistics().asJson(); // need to write this method (ise toString()).
-        }
-
+        //simulation.run24Hours();
         response.setContentType("application/json");
         response.setCharacterEncoding("UTF-8");
         response.getWriter().write(simulation.asJson());
@@ -196,10 +159,11 @@ public class AppServlet extends HttpServlet {
             moveInt = ControlStrategy.MOVE_ON_CON;
         }
         double moverad = -1;
-        if(moveradius != null && !"".equals(moveradius)) {
+        if (moveradius != null && !"".equals(moveradius)) {
             moverad = Double.parseDouble(moveradius);
         }
-        ControlStrategy strategy = ControlStrategyFactory.create(cullInt, vaccInt, vacrad, moveInt, moverad);
+        ControlStrategy strategy = 
+                ControlStrategyFactory.create(cullInt, vaccInt, vacrad, moveInt, moverad);
         simulation.setControlStrategy(strategy);
 
         if ("24Hours".equals(request.getParameter("mode"))) {

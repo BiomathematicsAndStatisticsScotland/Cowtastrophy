@@ -178,6 +178,7 @@ public class Simulation implements Serializable {
         // are no events for several days)
         if (!dayWithEvents) {
             // we've  had no events today so try tomorrow and keep going until we have had a day with events.
+            if(this.simulator.getCurrentTime() < day+200)
             run24Hours();
         }
     }
@@ -251,6 +252,7 @@ public class Simulation implements Serializable {
                          suspectedFarms.size(), day, simulator.getCurrentTime());
 
                 int numFailedTests = ((int) Math.round(suspectedFarms.size() * (1 - parameters.getTestSensitivity())));
+                log.info("from {} farms, num failed = {}", suspectedFarms.size(), numFailedTests);
                 // these farms are suspected but are not confirmed - these will be infectious but not suspected.
                 List<Farm> failedFarmTests = rng.selectManyOf(suspectedFarms, numFailedTests);
 

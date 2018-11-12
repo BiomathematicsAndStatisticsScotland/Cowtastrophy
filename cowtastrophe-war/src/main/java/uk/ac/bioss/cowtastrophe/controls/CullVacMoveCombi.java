@@ -24,17 +24,16 @@ public class CullVacMoveCombi extends ControlStrategy implements Serializable {
      * @param cull
      * @param vacc
      * @param vacrad
-	 * @param move
-	 * @param moveRad
-	 * @param moveDays
+     * @param move
+     * @param moveRad
      */
     public CullVacMoveCombi(final int cull, final int vacc, final double vacrad, final int move, final double moveRad) {
         log.info("Using CullVacMove Combi Strategy");
         vacradius = vacrad;
         culling = cull;
         vaccinate = vacc;
-		movement = move;
-		movement_rad = moveRad;
+	movement = move;
+	movement_rad = moveRad;
     }
 
     @Override
