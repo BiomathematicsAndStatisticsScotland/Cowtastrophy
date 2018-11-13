@@ -1,11 +1,8 @@
 package uk.ac.bioss.cowtastrophe.controls;
 
 import java.io.Serializable;
-import java.util.ArrayList;
 import java.util.stream.Collectors;
 import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import lombok.extern.slf4j.Slf4j;
 import uk.ac.bioss.cowtastrophe.ControlStrategy;
@@ -38,41 +35,42 @@ public class CullVacMoveCombi extends ControlStrategy implements Serializable {
 
     @Override
     public final void run(final Simulation simulation) {
-		doMovement(simulation);
-		doMovementCost(simulation);
+        doMovement(simulation);
+        doMovementCost(simulation);
         doVac(simulation);
         doCull(simulation);
     }
 	
-	public final void doMovementCost(final Simulation simulation) {
-		simulation.getStatistics().addCost(simulation.getDay(), 
-			simulation.getParameters().getCostOfMvmtBanPerDay() * simulation.getRestrictedFarms().size());
-	}
+    public final void doMovementCost(final Simulation simulation) {
+        simulation.getStatistics().addCost(simulation.getDay(), 
+        simulation.getParameters().getCostOfMvmtBanPerDay() * simulation.getRestrictedFarms().size());
+    }
 	
-	public final void doMovement(final Simulation simulation) {
-		if(movement == ControlStrategy.MOVE_NOT) {
-			return;
-		}
-		Set<Farm> MoveSourceList;
-		if(movement == ControlStrategy.MOVE_ON_CON) {
-			MoveSourceList = simulation.getConfirmedFarms();
-		}else {
-			MoveSourceList = simulation.getSuspectedOrConfirmedFarms();
-		}
-		for (Farm farm : MoveSourceList) {
-			
+    public final void doMovement(final Simulation simulation) {
+        if (movement == ControlStrategy.MOVE_NOT) {
+            return;
+        }
+        Set<Farm> MoveSourceList;
+        if (movement == ControlStrategy.MOVE_ON_CON) {
+            MoveSourceList = simulation.getConfirmedFarms();
+        } else {
+            MoveSourceList = simulation.getSuspectedOrConfirmedFarms();
+        }
+        for (Farm farm : MoveSourceList) {
             for (Farm farm2 : simulation.getHelper().getAllFarmsWithindistance(farm, movement_rad)) {
-                simulation.getRestrictedFarms().add(farm2.getId());
+                if(!farm2.isRestrictedMovement()){
+                    simulation.getRestrictedFarms().add(farm2.getId());
+                    farm2.setRestrictedMovement(true);
+                    farm2.setRestrictionSource(farm.getId());
+                }
             }
         }
-	}
+    }
 
-	
     public final void doCull(final Simulation simulation) {
         if (culling == ControlStrategy.CULL_NOT) {
             return;
         }
-        
         Set<Farm> toBeCulled;
         if (culling == ControlStrategy.CULL_ON_CON) {
             toBeCulled = simulation.getConfirmedFarms();

@@ -44,6 +44,8 @@ public class Farm implements SimulationState, Serializable {
         this.dayInfected = -1;
         this.dayCulled = -1;
         this.dayVaccinated = -1;
+        this.restrictedMovement = false;
+        this.restrictionSource = -1;
     }
 
     /**
@@ -160,6 +162,18 @@ public class Farm implements SimulationState, Serializable {
     @Getter
     @Setter
     private int infectionSource;
+    /**
+     * whether movement is restricted for this farm
+     */
+    @Getter
+    @Setter
+    private boolean restrictedMovement;
+    /**
+     * The farm that caused the movement restriction on us.
+     */
+    @Getter
+    @Setter
+    private int restrictionSource;
     /**
      * The serialVersionUID.
      */
